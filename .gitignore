@@ -1,0 +1,32 @@
+# Gradle
+.gradle/
+.kotlin/
+build/
+app/build/
+local.properties
+
+# Signing secrets
+keystore.properties
+keystore/*.jks
+keystore/*.keystore
+*.jks
+*.keystore
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local scratch output
+.tmp/
+docs-*.png
+docs-*.jpg
+build-output*.txt
+lint-output*.txt
+release-build-output.txt

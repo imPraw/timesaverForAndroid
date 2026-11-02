@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">One Pause</string>
+    <string name="accessibility_service_label">One Pause app protection</string>
+    <string name="accessibility_service_description">One Pause notices when you open an app you chose to protect and shows a short breathing pause before you continue. It never reads screen content, keystrokes, or personal data, and everything stays on your device.</string>
+</resources>
