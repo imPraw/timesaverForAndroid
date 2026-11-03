@@ -58,12 +58,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.onepause.ui.components.AppIcon
 import app.onepause.ui.components.PrimaryButton
-import app.onepause.ui.theme.Coral
-import app.onepause.ui.theme.PauseCream
-import app.onepause.ui.theme.PauseForest
-import app.onepause.ui.theme.PauseNight
-import app.onepause.ui.theme.PausePeach
-import app.onepause.ui.theme.PausePeachDeep
 import app.onepause.ui.theme.BodySans
 import kotlinx.coroutines.delay
 import java.util.Locale
@@ -84,6 +78,7 @@ fun PauseScreen(
     onContinue: () -> Unit,
     onPhaseChange: (Boolean) -> Unit = {}
 ) {
+    val colors = MaterialTheme.colorScheme
     var secondsLeft by remember(pauseSeconds) { mutableIntStateOf(pauseSeconds) }
     val breath = remember { Animatable(0f) }
     var phase by remember { mutableStateOf(BreathPhase.INHALE) }
@@ -128,7 +123,7 @@ fun PauseScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    colors = listOf(PauseNight, PauseForest, Color(0xFF133429))
+                    colors = listOf(colors.background, colors.surfaceContainer, colors.surfaceContainerHigh)
                 )
             )
     ) {
@@ -153,7 +148,7 @@ fun PauseScreen(
                 Text(
                     text = "ONE PAUSE",
                     style = MaterialTheme.typography.labelSmall,
-                    color = PauseCream.copy(alpha = 0.78f),
+                    color = colors.onSurface.copy(alpha = 0.78f),
                     letterSpacing = 2.sp
                 )
                 Spacer(Modifier.weight(1f))
@@ -161,7 +156,7 @@ fun PauseScreen(
                     Text(
                         text = "PRACTICE",
                         style = MaterialTheme.typography.labelSmall,
-                        color = PausePeach,
+                        color = colors.primary,
                         modifier = Modifier
                             .background(Color.White.copy(alpha = 0.07f), CircleShape)
                             .padding(horizontal = 10.dp, vertical = 6.dp)
@@ -172,7 +167,7 @@ fun PauseScreen(
                     Icon(
                         imageVector = Icons.Rounded.Close,
                         contentDescription = "Close the pause",
-                        tint = PauseCream.copy(alpha = 0.7f),
+                        tint = colors.onSurface.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -197,12 +192,12 @@ fun PauseScreen(
                     Text(
                         text = if (isPreview) "A practice pause" else "YOU REACHED FOR",
                         style = MaterialTheme.typography.labelSmall,
-                        color = PauseCream.copy(alpha = 0.5f)
+                        color = colors.onSurface.copy(alpha = 0.5f)
                     )
                     Text(
                         text = displayName,
                         style = MaterialTheme.typography.titleMedium,
-                        color = PauseCream.copy(alpha = 0.92f),
+                        color = colors.onSurface.copy(alpha = 0.92f),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -238,7 +233,7 @@ fun PauseScreen(
                         } else {
                             MaterialTheme.typography.headlineLarge
                         },
-                        color = PauseCream,
+                        color = colors.onSurface,
                         textAlign = TextAlign.Center
                     )
                     Spacer(Modifier.height(8.dp))
@@ -250,7 +245,7 @@ fun PauseScreen(
                             else -> "Open it on purpose, or leave it here."
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = PauseCream.copy(alpha = 0.6f),
+                        color = colors.onSurface.copy(alpha = 0.6f),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 20.dp)
                     )
@@ -269,8 +264,8 @@ fun PauseScreen(
                 text = if (isPreview) "Back to One Pause" else "Not now",
                 onClick = onAvoid,
                 modifier = Modifier.fillMaxWidth(),
-                containerColor = PauseCream,
-                contentColor = PauseNight
+                containerColor = colors.onSurface,
+                contentColor = colors.background
             )
 
             Spacer(Modifier.height(10.dp))
@@ -285,18 +280,18 @@ fun PauseScreen(
                 border = BorderStroke(
                     width = 1.dp,
                     color = if (canContinue) {
-                        PauseCream.copy(alpha = 0.34f)
+                        colors.onSurface.copy(alpha = 0.34f)
                     } else {
-                        PauseCream.copy(alpha = 0.12f)
+                        colors.onSurface.copy(alpha = 0.12f)
                     }
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = if (canContinue) {
-                        PauseCream.copy(alpha = 0.88f)
+                        colors.onSurface.copy(alpha = 0.88f)
                     } else {
-                        PauseCream.copy(alpha = 0.38f)
+                        colors.onSurface.copy(alpha = 0.38f)
                     },
-                    disabledContentColor = PauseCream.copy(alpha = 0.38f)
+                    disabledContentColor = colors.onSurface.copy(alpha = 0.38f)
                 )
             ) {
                 Text(
@@ -322,7 +317,7 @@ fun PauseScreen(
                     modifier = Modifier
                         .size(5.dp)
                         .background(
-                            if (canContinue) Coral else PauseCream.copy(alpha = 0.35f),
+                            if (canContinue) colors.tertiary else colors.onSurface.copy(alpha = 0.35f),
                             CircleShape
                         )
                 )
@@ -334,7 +329,7 @@ fun PauseScreen(
                         "${pauseSeconds}-second pause · set by you"
                     },
                     style = MaterialTheme.typography.bodySmall,
-                    color = PauseCream.copy(alpha = 0.4f)
+                    color = colors.onSurface.copy(alpha = 0.4f)
                 )
             }
         }
@@ -343,6 +338,7 @@ fun PauseScreen(
 
 @Composable
 private fun QuietNote() {
+    val colors = MaterialTheme.colorScheme
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
@@ -352,7 +348,7 @@ private fun QuietNote() {
                     Brush.verticalGradient(
                         listOf(
                             Color.Transparent,
-                            PauseCream.copy(alpha = 0.28f),
+                            colors.onSurface.copy(alpha = 0.28f),
                             Color.Transparent
                         )
                     )
@@ -362,19 +358,20 @@ private fun QuietNote() {
         Text(
             text = "Nothing is required of you.",
             style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
-            color = PauseCream.copy(alpha = 0.42f)
+            color = colors.onSurface.copy(alpha = 0.42f)
         )
     }
 }
 
 @Composable
 private fun PauseAtmosphere(modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
     Canvas(modifier = modifier) {
         val width = size.width
         val height = size.height
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(PausePeach.copy(alpha = 0.11f), Color.Transparent),
+                colors = listOf(colors.primary.copy(alpha = 0.11f), Color.Transparent),
                 center = Offset(width * 0.78f, height * 0.22f),
                 radius = width * 0.7f
             ),
@@ -383,7 +380,7 @@ private fun PauseAtmosphere(modifier: Modifier = Modifier) {
         )
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(Coral.copy(alpha = 0.07f), Color.Transparent),
+                colors = listOf(colors.tertiary.copy(alpha = 0.07f), Color.Transparent),
                 center = Offset(width * 0.1f, height * 0.8f),
                 radius = width * 0.75f
             ),
@@ -399,7 +396,7 @@ private fun PauseAtmosphere(modifier: Modifier = Modifier) {
         )
         specks.forEachIndexed { index, point ->
             drawCircle(
-                color = PauseCream.copy(alpha = if (index % 2 == 0) 0.16f else 0.09f),
+                color = colors.onSurface.copy(alpha = if (index % 2 == 0) 0.16f else 0.09f),
                 radius = if (index % 3 == 0) 2.2f else 1.3f,
                 center = point
             )
@@ -414,6 +411,7 @@ private fun BreathingOrb(
     phaseLabel: String,
     size: Dp
 ) {
+    val colors = MaterialTheme.colorScheme
     Box(
         modifier = Modifier.size(size),
         contentAlignment = Alignment.Center
@@ -422,26 +420,26 @@ private fun BreathingOrb(
             val center = center
             val maxRadius = this.size.minDimension / 2f
             drawCircle(
-                color = PauseCream.copy(alpha = 0.11f),
+                color = colors.onSurface.copy(alpha = 0.11f),
                 radius = maxRadius * 0.93f,
                 style = Stroke(width = 1.dp.toPx())
             )
             drawCircle(
-                color = PauseCream.copy(alpha = 0.07f),
+                color = colors.onSurface.copy(alpha = 0.07f),
                 radius = maxRadius * 0.78f,
                 style = Stroke(width = 1.dp.toPx())
             )
             drawCircle(
-                color = PausePeach.copy(alpha = 0.08f),
+                color = colors.primary.copy(alpha = 0.08f),
                 radius = maxRadius * (0.68f + breath * 0.08f)
             )
             val orbRadius = maxRadius * (0.52f + breath * 0.105f)
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        Color(0xFFF8C9AC),
-                        PausePeach,
-                        PausePeachDeep
+                        colors.primaryContainer,
+                        colors.primary,
+                        colors.primaryContainer
                     ),
                     center = Offset(center.x - orbRadius * 0.28f, center.y - orbRadius * 0.3f),
                     radius = orbRadius * 1.45f
@@ -449,13 +447,13 @@ private fun BreathingOrb(
                 radius = orbRadius
             )
             drawCircle(
-                color = PauseCream.copy(alpha = 0.2f),
+                color = colors.onSurface.copy(alpha = 0.2f),
                 radius = orbRadius,
                 style = Stroke(width = 1.3.dp.toPx())
             )
             val arcRadius = orbRadius * 0.82f
             drawArc(
-                color = PauseCream.copy(alpha = 0.22f),
+                color = colors.onSurface.copy(alpha = 0.22f),
                 startAngle = 210f,
                 sweepAngle = 70f,
                 useCenter = false,
@@ -465,7 +463,7 @@ private fun BreathingOrb(
             )
             if (phase == BreathPhase.INHALE) {
                 drawCircle(
-                    color = PauseCream.copy(alpha = 0.5f),
+                    color = colors.onSurface.copy(alpha = 0.5f),
                     radius = 2.4.dp.toPx(),
                     center = Offset(center.x + orbRadius * 0.73f, center.y + orbRadius * 0.31f)
                 )
@@ -483,7 +481,7 @@ private fun BreathingOrb(
                         BreathPhase.INHALE -> "Breathe in"
                         BreathPhase.EXHALE -> "Breathe out"
                     },
-                    color = PauseNight,
+                    color = colors.background,
                     fontFamily = BodySans,
                     fontWeight = FontWeight.Medium,
                     fontSize = 19.sp,
@@ -493,7 +491,7 @@ private fun BreathingOrb(
             Spacer(Modifier.height(5.dp))
             Text(
                 text = "through the pause",
-                color = PauseNight.copy(alpha = 0.52f),
+                color = colors.background.copy(alpha = 0.52f),
                 fontFamily = BodySans,
                 fontSize = 11.sp,
                 letterSpacing = 0.8.sp
@@ -504,16 +502,17 @@ private fun BreathingOrb(
 
 @Composable
 private fun BrandGlyph(size: Dp) {
+    val colors = MaterialTheme.colorScheme
     Canvas(modifier = Modifier.size(size)) {
         val d = this.size.minDimension
         drawCircle(
-            color = PauseCream.copy(alpha = 0.8f),
+            color = colors.onSurface.copy(alpha = 0.8f),
             radius = d * 0.43f,
             style = Stroke(width = d * 0.05f)
         )
-        drawCircle(color = Coral, radius = d * 0.14f)
+        drawCircle(color = colors.tertiary, radius = d * 0.14f)
         drawArc(
-            color = Coral,
+            color = colors.tertiary,
             startAngle = -80f,
             sweepAngle = 65f,
             useCenter = false,

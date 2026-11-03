@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -60,16 +61,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import app.onepause.ui.theme.BodySans
-import app.onepause.ui.theme.Butter
-import app.onepause.ui.theme.Coral
-import app.onepause.ui.theme.Forest
-import app.onepause.ui.theme.Ink
-import app.onepause.ui.theme.Line
-import app.onepause.ui.theme.MutedInk
-import app.onepause.ui.theme.Paper
-import app.onepause.ui.theme.PauseCream
-import app.onepause.ui.theme.Sage
-import app.onepause.ui.theme.SurfaceCream
 import app.onepause.util.LightAppInfo
 import app.onepause.util.loadLightAppInfo
 import kotlinx.coroutines.Dispatchers
@@ -81,11 +72,12 @@ fun BrandMark(
     modifier: Modifier = Modifier,
     size: Dp = 36.dp,
     light: Boolean = false,
-    accent: Color = Coral
+    accent: Color = MaterialTheme.colorScheme.tertiary
 ) {
+    val colors = MaterialTheme.colorScheme
     Canvas(modifier = modifier.size(size)) {
         val diameter = this.size.minDimension
-        val ringColor = if (light) PauseCream else Ink
+        val ringColor = if (light) colors.inverseOnSurface else colors.onSurface
         drawCircle(
             color = ringColor.copy(alpha = 0.86f),
             radius = diameter * 0.44f,
@@ -120,6 +112,7 @@ fun AppIcon(
     modifier: Modifier = Modifier,
     size: Dp = 48.dp
 ) {
+    val colors = MaterialTheme.colorScheme
     val imageBitmap = remember(icon, packageName) {
         icon?.let { drawable ->
             runCatching {
@@ -128,11 +121,11 @@ fun AppIcon(
             }.getOrNull()
         }
     }
-    val fallbackColor = remember(packageName) {
+    val fallbackColor = remember(packageName, colors) {
         val palette = listOf(
-            Color(0xFFDCE7DD),
-            Color(0xFFF6D8C9),
-            Color(0xFFF9EDCD),
+            colors.secondaryContainer,
+            colors.tertiaryContainer,
+            colors.primaryContainer,
             Color(0xFFD9E4E8),
             Color(0xFFE8DDD1)
         )
@@ -157,7 +150,7 @@ fun AppIcon(
         ) {
             Text(
                 text = packageName.substringAfterLast('.').take(1).uppercase(Locale.getDefault()),
-                color = Ink,
+                color = colors.onSurface,
                 fontFamily = BodySans,
                 fontWeight = FontWeight.Bold,
                 fontSize = (size.value * 0.4f).sp
@@ -186,6 +179,7 @@ fun ScreenHeader(
     subtitle: String? = null,
     trailing: (@Composable () -> Unit)? = null
 ) {
+    val colors = MaterialTheme.colorScheme
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -195,20 +189,20 @@ fun ScreenHeader(
             Text(
                 text = overline.uppercase(Locale.getDefault()),
                 style = MaterialTheme.typography.labelSmall,
-                color = MutedInk
+                color = colors.onSurfaceVariant
             )
             Spacer(Modifier.height(9.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineLarge,
-                color = Ink
+                color = colors.onSurface
             )
             if (subtitle != null) {
                 Spacer(Modifier.height(8.dp))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
             }
         }
@@ -223,7 +217,7 @@ fun ScreenHeader(
 fun SectionLabel(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = MutedInk
+    color: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
     Text(
         text = text.uppercase(Locale.getDefault()),
@@ -237,9 +231,9 @@ fun SectionLabel(
 fun Pill(
     text: String,
     modifier: Modifier = Modifier,
-    background: Color = SurfaceCream,
-    contentColor: Color = Ink,
-    borderColor: Color = Line
+    background: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    borderColor: Color = MaterialTheme.colorScheme.outlineVariant
 ) {
     Surface(
         modifier = modifier,
@@ -264,12 +258,12 @@ fun PrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     icon: ImageVector? = null,
-    containerColor: Color = Ink,
-    contentColor: Color = PauseCream
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimary
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.height(54.dp),
+        modifier = modifier.heightIn(min = 56.dp),
         enabled = enabled,
         shape = CircleShape,
         colors = ButtonDefaults.buttonColors(
@@ -293,7 +287,7 @@ fun TextAction(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    color: Color = Ink,
+    color: Color = MaterialTheme.colorScheme.onSurface,
     enabled: Boolean = true,
     textAlign: TextAlign? = null
 ) {
@@ -320,26 +314,14 @@ fun OnePauseSwitch(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Switch(
-        checked = checked,
-        onCheckedChange = onCheckedChange,
-        modifier = modifier,
-        colors = SwitchDefaults.colors(
-            checkedThumbColor = PauseCream,
-            checkedTrackColor = Forest,
-            checkedBorderColor = Forest,
-            uncheckedThumbColor = SurfaceCream,
-            uncheckedTrackColor = Line.copy(alpha = 0.75f),
-            uncheckedBorderColor = Line
-        )
-    )
+    Switch(checked = checked, onCheckedChange = onCheckedChange, modifier = modifier)
 }
 
 @Composable
 fun SoftCard(
     modifier: Modifier = Modifier,
-    color: Color = SurfaceCream,
-    borderColor: Color = Line,
+    color: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    borderColor: Color = MaterialTheme.colorScheme.outlineVariant,
     content: @Composable () -> Unit
 ) {
     Surface(
@@ -359,18 +341,19 @@ fun ChoiceChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = MaterialTheme.colorScheme
     val background by animateColorAsState(
-        if (selected) Ink else Color.Transparent,
+        if (selected) colors.onSurface else Color.Transparent,
         animationSpec = tween(180),
         label = "chipBackground"
     )
     val contentColor by animateColorAsState(
-        if (selected) PauseCream else Ink,
+        if (selected) colors.inverseOnSurface else colors.onSurface,
         animationSpec = tween(180),
         label = "chipContent"
     )
     val borderColor by animateColorAsState(
-        if (selected) Ink else Line,
+        if (selected) colors.onSurface else colors.outlineVariant,
         animationSpec = tween(180),
         label = "chipBorder"
     )
@@ -380,6 +363,7 @@ fun ChoiceChip(
             .background(background)
             .border(BorderStroke(1.dp, borderColor), CircleShape)
             .clickable(onClick = onClick)
+            .heightIn(min = 48.dp)
             .padding(horizontal = 16.dp, vertical = 11.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -393,8 +377,9 @@ fun ChoiceChip(
 
 @Composable
 fun Dot(active: Boolean, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
     val size by animateDpAsState(if (active) 8.dp else 6.dp, label = "dotSize")
-    val color by animateColorAsState(if (active) Forest else Sage, label = "dotColor")
+    val color by animateColorAsState(if (active) colors.inverseSurface else colors.secondary, label = "dotColor")
     Box(
         modifier = modifier
             .size(size)
@@ -409,6 +394,7 @@ fun EmptyState(
     modifier: Modifier = Modifier,
     action: (@Composable () -> Unit)? = null
 ) {
+    val colors = MaterialTheme.colorScheme
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -417,24 +403,24 @@ fun EmptyState(
     ) {
         Canvas(Modifier.size(54.dp)) {
             drawCircle(
-                color = Sage.copy(alpha = 0.4f),
+                color = colors.secondary.copy(alpha = 0.4f),
                 radius = size.minDimension * 0.46f,
                 style = Stroke(width = 1.5.dp.toPx())
             )
-            drawCircle(color = Coral, radius = size.minDimension * 0.12f)
+            drawCircle(color = colors.tertiary, radius = size.minDimension * 0.12f)
         }
         Spacer(Modifier.height(16.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.headlineMedium,
-            color = Ink,
+            color = colors.onSurface,
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(8.dp))
         Text(
             text = body,
             style = MaterialTheme.typography.bodyMedium,
-            color = MutedInk,
+            color = colors.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
         if (action != null) {
@@ -446,10 +432,11 @@ fun EmptyState(
 
 @Composable
 fun DecorativeDots(modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
     Canvas(modifier = modifier) {
-        drawCircle(color = Coral.copy(alpha = 0.12f), radius = size.minDimension * 0.45f)
-        drawCircle(color = Butter.copy(alpha = 0.18f), radius = size.minDimension * 0.2f)
-        drawCircle(color = Sage.copy(alpha = 0.14f), radius = size.minDimension * 0.3f)
+        drawCircle(color = colors.tertiary.copy(alpha = 0.12f), radius = size.minDimension * 0.45f)
+        drawCircle(color = colors.tertiary.copy(alpha = 0.18f), radius = size.minDimension * 0.2f)
+        drawCircle(color = colors.secondary.copy(alpha = 0.14f), radius = size.minDimension * 0.3f)
     }
 }
 
@@ -466,6 +453,7 @@ fun AppIconNameRow(
     supporting: String? = null,
     trailing: (@Composable () -> Unit)? = null
 ) {
+    val colors = MaterialTheme.colorScheme
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -476,7 +464,7 @@ fun AppIconNameRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.titleMedium,
-                color = Ink,
+                color = colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -485,7 +473,7 @@ fun AppIconNameRow(
                 Text(
                     text = supporting,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedInk,
+                    color = colors.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -503,19 +491,20 @@ fun NavSurface(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     Surface(
         modifier = modifier
             .navigationBarsPadding()
             .padding(horizontal = 20.dp, vertical = 10.dp),
         shape = RoundedCornerShape(28.dp),
-        color = Ink,
+        color = colors.onSurface,
         shadowElevation = 12.dp,
         content = content
     )
 }
 
 @Composable
-fun SurfaceDivider(modifier: Modifier = Modifier, color: Color = Line) {
+fun SurfaceDivider(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.outlineVariant) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -525,24 +514,26 @@ fun SurfaceDivider(modifier: Modifier = Modifier, color: Color = Line) {
 }
 
 @Composable
-fun OverlineWithDot(text: String, modifier: Modifier = Modifier, dotColor: Color = Coral) {
+fun OverlineWithDot(text: String, modifier: Modifier = Modifier, dotColor: Color = MaterialTheme.colorScheme.tertiary) {
+    val colors = MaterialTheme.colorScheme
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(6.dp).background(dotColor, CircleShape))
         Spacer(Modifier.width(7.dp))
         Text(
             text = text.uppercase(Locale.getDefault()),
             style = MaterialTheme.typography.labelSmall,
-            color = MutedInk
+            color = colors.onSurfaceVariant
         )
     }
 }
 
 @Composable
 fun BackgroundWash(modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
     Canvas(modifier = modifier) {
         drawCircle(
             brush = Brush.radialGradient(
-                listOf(Butter.copy(alpha = 0.22f), Color.Transparent),
+                listOf(colors.tertiary.copy(alpha = 0.22f), Color.Transparent),
                 center = Offset(size.width * 0.92f, size.height * 0.08f),
                 radius = size.width * 0.52f
             ),
@@ -551,7 +542,7 @@ fun BackgroundWash(modifier: Modifier = Modifier) {
         )
         drawCircle(
             brush = Brush.radialGradient(
-                listOf(Sage.copy(alpha = 0.17f), Color.Transparent),
+                listOf(colors.secondary.copy(alpha = 0.17f), Color.Transparent),
                 center = Offset(size.width * 0.04f, size.height * 0.36f),
                 radius = size.width * 0.6f
             ),
@@ -566,14 +557,15 @@ fun Context.isProbablyInstalled(packageName: String): Boolean = runCatching {
 }.isSuccess
 
 @Composable
-fun ExplorePill(text: String, color: Color = Coral) {
+fun ExplorePill(text: String, color: Color = MaterialTheme.colorScheme.tertiary) {
+    val colors = MaterialTheme.colorScheme
     Surface(
         shape = CircleShape,
         color = color.copy(alpha = 0.15f)
     ) {
         Text(
             text = text,
-            color = Ink,
+            color = colors.onSurface,
             style = MaterialTheme.typography.labelMedium,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )

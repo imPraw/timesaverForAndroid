@@ -76,7 +76,7 @@ class PauseOverlayController(
                 }
             }
             setContent {
-                OnePauseTheme {
+                OnePauseTheme(dark = true) {
                     PauseScreen(
                         appLabel = appLabel,
                         appPackage = appPackage,

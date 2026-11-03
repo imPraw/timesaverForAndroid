@@ -27,7 +27,7 @@ class PausePreviewActivity : ComponentActivity() {
         val preferences = AppPreferences(this)
 
         setContent {
-            OnePauseTheme {
+            OnePauseTheme(dark = true) {
                 val hapticFeedback = LocalHapticFeedback.current
                 BackHandler { finish() }
                 PauseScreen(

@@ -4,7 +4,7 @@
 
 One Pause is an independent, local-first Android app that adds a short breathing pause before selected distracting apps open. It does not lock you out. It gives you a moment to notice the reflex, then decide whether to continue or leave the app for later.
 
-![One Pause home screen](docs/screenshots/home.jpg)
+![One Pause with Material You](docs/screenshots/pixel-home.jpg)
 
 ## What it does
 
@@ -17,15 +17,12 @@ One Pause is an independent, local-first Android app that adds a short breathing
 
 ## Screenshots
 
-| First run | Home | The pause |
+| Light mode | Dark mode | The pause |
 | --- | --- | --- |
-| ![Onboarding](docs/screenshots/onboarding.jpg) | ![Home](docs/screenshots/home.jpg) | ![Breathing pause](docs/screenshots/pause.jpg) |
-| **Apps** | **Insights** | **Settings** |
-| ![Protected apps](docs/screenshots/apps.jpg) | ![Insights](docs/screenshots/insights.jpg) | ![Settings](docs/screenshots/settings.jpg) |
+| ![Home](docs/screenshots/pixel-home.jpg) | ![Dark home](docs/screenshots/pixel-dark.jpg) | ![Breathing pause](docs/screenshots/pixel-pause.jpg) |
 
-The notices screen and bundled license texts are available inside **Settings → Licenses & notices**:
-
-![Licenses and notices](docs/screenshots/licenses.jpg)
+Colors vary with your wallpaper. Screenshots captured on an Android emulator.
+Licenses remain available inside **Settings → Licenses & notices**.
 
 ## How it works
 
@@ -47,7 +44,15 @@ Pressing Home or Back while the pause is visible also counts as leaving the app 
 - **Protected-app search and filters**, with suggested popular apps highlighted.
 - **Erase history** without changing your protected apps or preferences.
 - **In-app licenses** for the typeface and open-source dependencies.
-- **Portrait-first, phone-first design** with a warm cream, forest, and coral visual system.
+- **Pixel-inspired Material You design** with wallpaper-derived colors on Android 12+, automatic light/dark mode, native Material navigation, and system sans-serif typography.
+- **Daily bloom**: grow one petal per intentional pause, up to five each day. Progress comes from existing on-device history.
+- **Wallpaper-tinted breathing screen** with a calm dark palette and existing optional haptics.
+
+### Pixel refresh (1.1.0)
+
+Colors follow **Settings → Wallpaper & style**, and the main screens follow the system dark theme. Older Android versions use the bundled fallback palette. The breathing screen intentionally stays dark. Dynamic color uses Android's [Material 3 color APIs](https://developer.android.com/develop/ui/compose/designsystems/material3); no wallpaper or photo permission is needed.
+
+Install `OnePause-v1.1.0.apk` over your existing copy to retain settings and history, provided both copies use the same signing key.
 
 ## Privacy
 

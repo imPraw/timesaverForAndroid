@@ -47,15 +47,6 @@ import app.onepause.ui.components.OnePauseSwitch
 import app.onepause.ui.components.ScreenHeader
 import app.onepause.ui.components.SectionLabel
 import app.onepause.ui.components.SoftCard
-import app.onepause.ui.theme.Coral
-import app.onepause.ui.theme.CoralSoft
-import app.onepause.ui.theme.ForestMist
-import app.onepause.ui.theme.Ink
-import app.onepause.ui.theme.Line
-import app.onepause.ui.theme.MutedInk
-import app.onepause.ui.theme.PauseCream
-import app.onepause.ui.theme.Sage
-import app.onepause.ui.theme.SurfaceCream
 import app.onepause.util.pluralize
 
 @Composable
@@ -73,6 +64,7 @@ fun SettingsScreen(
     onOpenLicenses: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = MaterialTheme.colorScheme
     var showEraseDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
@@ -115,7 +107,7 @@ fun SettingsScreen(
                 Text(
                     text = "Long enough to interrupt the reflex, short enough to live with.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
             }
         }
@@ -139,14 +131,14 @@ fun SettingsScreen(
                     Icon(
                         imageVector = Icons.Rounded.Timer,
                         contentDescription = null,
-                        tint = Coral,
+                        tint = colors.tertiary,
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(Modifier.width(7.dp))
                     Text(
                         text = "A new app session, returned to you.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MutedInk
+                        color = colors.onSurfaceVariant
                     )
                 }
             }
@@ -183,13 +175,13 @@ fun SettingsScreen(
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
-                                .background(ForestMist, CircleShape),
+                                .background(colors.secondaryContainer, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Lock,
                                 contentDescription = null,
-                                tint = Ink,
+                                tint = colors.onSurface,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -198,13 +190,13 @@ fun SettingsScreen(
                             Text(
                                 text = "Private by design",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = Ink
+                                color = colors.onSurface
                             )
                             Spacer(Modifier.height(3.dp))
                             Text(
                                 text = "No account. No tracking. No internet permission. Your pause history never leaves this phone.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MutedInk
+                                color = colors.onSurfaceVariant
                             )
                         }
                     }
@@ -213,7 +205,7 @@ fun SettingsScreen(
                             .padding(horizontal = 16.dp)
                             .fillMaxWidth()
                             .height(1.dp)
-                            .background(Line.copy(alpha = 0.7f))
+                            .background(colors.outlineVariant.copy(alpha = 0.7f))
                     )
                     Row(
                         modifier = Modifier
@@ -225,7 +217,7 @@ fun SettingsScreen(
                         Icon(
                             imageVector = Icons.Rounded.DeleteOutline,
                             contentDescription = null,
-                            tint = if (eventCount > 0) Coral else MutedInk.copy(alpha = 0.35f),
+                            tint = if (eventCount > 0) colors.tertiary else colors.onSurfaceVariant.copy(alpha = 0.35f),
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(Modifier.width(9.dp))
@@ -236,13 +228,13 @@ fun SettingsScreen(
                                 "Erase pause history · $eventCount ${pluralize(eventCount, "event")}"
                             },
                             style = MaterialTheme.typography.titleSmall,
-                            color = if (eventCount > 0) Ink else MutedInk.copy(alpha = 0.55f)
+                            color = if (eventCount > 0) colors.onSurface else colors.onSurfaceVariant.copy(alpha = 0.55f)
                         )
                         Spacer(Modifier.weight(1f))
                         Icon(
                             imageVector = Icons.Rounded.ChevronRight,
                             contentDescription = null,
-                            tint = MutedInk.copy(alpha = 0.45f),
+                            tint = colors.onSurfaceVariant.copy(alpha = 0.45f),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -280,20 +272,20 @@ fun SettingsScreen(
                         Text(
                             text = "Licenses & notices",
                             style = MaterialTheme.typography.titleSmall,
-                            color = Ink
+                            color = colors.onSurface
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
                             text = "Typeface and open-source credits",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MutedInk
+                            color = colors.onSurfaceVariant
                         )
                     }
                     Spacer(Modifier.width(10.dp))
                     Icon(
                         imageVector = Icons.Rounded.ChevronRight,
                         contentDescription = null,
-                        tint = MutedInk.copy(alpha = 0.55f),
+                        tint = colors.onSurfaceVariant.copy(alpha = 0.55f),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -312,13 +304,13 @@ fun SettingsScreen(
                 Text(
                     text = "One Pause · ${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = "Made to protect your attention.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedInk.copy(alpha = 0.58f)
+                    color = colors.onSurfaceVariant.copy(alpha = 0.58f)
                 )
             }
         }
@@ -331,14 +323,14 @@ fun SettingsScreen(
                 Text(
                     text = "Erase pause history?",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = Ink
+                    color = colors.onSurface
                 )
             },
             text = {
                 Text(
                     text = "This clears your pauses, time reclaimed, and app insights. Your protected apps and settings stay the same.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
             },
             confirmButton = {
@@ -348,15 +340,15 @@ fun SettingsScreen(
                         showEraseDialog = false
                     }
                 ) {
-                    Text("Erase", color = Coral)
+                    Text("Erase", color = colors.tertiary)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showEraseDialog = false }) {
-                    Text("Keep it", color = Ink)
+                    Text("Keep it", color = colors.onSurface)
                 }
             },
-            containerColor = SurfaceCream,
+            containerColor = colors.surfaceContainerLow,
             shape = MaterialTheme.shapes.large
         )
     }
@@ -367,11 +359,12 @@ private fun ProtectionStatusCard(
     serviceEnabled: Boolean,
     onOpenAccessibilitySettings: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     SoftCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onOpenAccessibilitySettings),
-        color = if (serviceEnabled) ForestMist.copy(alpha = 0.65f) else CoralSoft.copy(alpha = 0.65f),
+        color = if (serviceEnabled) colors.secondaryContainer.copy(alpha = 0.65f) else colors.tertiaryContainer.copy(alpha = 0.65f),
         borderColor = Color.Transparent
     ) {
         Row(
@@ -382,7 +375,7 @@ private fun ProtectionStatusCard(
                 modifier = Modifier
                     .size(44.dp)
                     .background(
-                        if (serviceEnabled) Sage.copy(alpha = 0.55f) else Coral.copy(alpha = 0.2f),
+                        if (serviceEnabled) colors.secondary.copy(alpha = 0.55f) else colors.tertiary.copy(alpha = 0.2f),
                         CircleShape
                     ),
                 contentAlignment = Alignment.Center
@@ -390,7 +383,7 @@ private fun ProtectionStatusCard(
                 Icon(
                     imageVector = if (serviceEnabled) Icons.Rounded.Check else Icons.Rounded.Lock,
                     contentDescription = null,
-                    tint = Ink,
+                    tint = colors.onSurface,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -399,7 +392,7 @@ private fun ProtectionStatusCard(
                 Text(
                     text = if (serviceEnabled) "Protection is on" else "Protection is off",
                     style = MaterialTheme.typography.titleMedium,
-                    color = Ink
+                    color = colors.onSurface
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
@@ -409,14 +402,14 @@ private fun ProtectionStatusCard(
                         "Turn on Accessibility access to begin."
                     },
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
             }
             Spacer(Modifier.width(10.dp))
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                 contentDescription = "Open Android accessibility settings",
-                tint = Ink.copy(alpha = 0.7f),
+                tint = colors.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -429,18 +422,19 @@ private fun SettingsCard(
     description: String,
     content: @Composable () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     SoftCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(18.dp)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge,
-                color = Ink
+                color = colors.onSurface
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = MutedInk
+                color = colors.onSurfaceVariant
             )
             Spacer(Modifier.height(14.dp))
             content()
@@ -454,6 +448,7 @@ private fun SettingRow(
     subtitle: String,
     trailing: @Composable () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier.padding(horizontal = 17.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -462,13 +457,13 @@ private fun SettingRow(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = Ink
+                color = colors.onSurface
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MutedInk
+                color = colors.onSurfaceVariant
             )
         }
         Spacer(Modifier.width(12.dp))
@@ -478,23 +473,24 @@ private fun SettingRow(
 
 @Composable
 private fun HowRow(number: String, title: String, body: String) {
+    val colors = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.Top) {
         Text(
             text = number,
             style = MaterialTheme.typography.labelSmall,
-            color = Coral,
+            color = colors.tertiary,
             modifier = Modifier.width(25.dp)
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
-                color = Ink
+                color = colors.onSurface
             )
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodySmall,
-                color = MutedInk
+                color = colors.onSurfaceVariant
             )
         }
     }

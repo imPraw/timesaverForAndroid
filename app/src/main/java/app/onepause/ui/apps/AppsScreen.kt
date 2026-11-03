@@ -60,15 +60,6 @@ import app.onepause.ui.components.PrimaryButton
 import app.onepause.ui.components.ScreenHeader
 import app.onepause.ui.components.SectionLabel
 import app.onepause.ui.components.SoftCard
-import app.onepause.ui.theme.ButterSoft
-import app.onepause.ui.theme.Coral
-import app.onepause.ui.theme.CoralSoft
-import app.onepause.ui.theme.ForestMist
-import app.onepause.ui.theme.Ink
-import app.onepause.ui.theme.Line
-import app.onepause.ui.theme.MutedInk
-import app.onepause.ui.theme.PauseCream
-import app.onepause.ui.theme.SurfaceCream
 import app.onepause.util.InstalledApp
 import app.onepause.util.loadLaunchableApps
 import app.onepause.util.suggestedPackages
@@ -84,6 +75,7 @@ fun AppsScreen(
     onEnableProtection: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
     var apps by remember { mutableStateOf<List<InstalledApp>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
@@ -131,13 +123,13 @@ fun AppsScreen(
                 ) {
                     Pill(
                         text = "${selectedPackages.size} protected",
-                        background = if (selectedPackages.isNotEmpty()) ForestMist else SurfaceCream,
-                        borderColor = if (selectedPackages.isNotEmpty()) Color.Transparent else Line
+                        background = if (selectedPackages.isNotEmpty()) colors.secondaryContainer else colors.surfaceContainerLow,
+                        borderColor = if (selectedPackages.isNotEmpty()) Color.Transparent else colors.outlineVariant
                     )
                     if (!serviceEnabled) {
                         Pill(
                             text = "protection off",
-                            background = CoralSoft.copy(alpha = 0.75f),
+                            background = colors.tertiaryContainer.copy(alpha = 0.75f),
                             borderColor = Color.Transparent
                         )
                     }
@@ -155,14 +147,14 @@ fun AppsScreen(
                         Text(
                             text = "Search your apps",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MutedInk.copy(alpha = 0.7f)
+                            color = colors.onSurfaceVariant.copy(alpha = 0.7f)
                         )
                     },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Rounded.Search,
                             contentDescription = null,
-                            tint = MutedInk,
+                            tint = colors.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -172,7 +164,7 @@ fun AppsScreen(
                                 Icon(
                                     imageVector = Icons.Rounded.Close,
                                     contentDescription = "Clear search",
-                                    tint = MutedInk,
+                                    tint = colors.onSurfaceVariant,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -186,13 +178,13 @@ fun AppsScreen(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { }),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = SurfaceCream,
-                        unfocusedContainerColor = SurfaceCream,
-                        focusedBorderColor = Ink.copy(alpha = 0.55f),
-                        unfocusedBorderColor = Line,
-                        cursorColor = Coral,
-                        focusedTextColor = Ink,
-                        unfocusedTextColor = Ink
+                        focusedContainerColor = colors.surfaceContainerLow,
+                        unfocusedContainerColor = colors.surfaceContainerLow,
+                        focusedBorderColor = colors.onSurface.copy(alpha = 0.55f),
+                        unfocusedBorderColor = colors.outlineVariant,
+                        cursorColor = colors.tertiary,
+                        focusedTextColor = colors.onSurface,
+                        unfocusedTextColor = colors.onSurface
                     )
                 )
                 Spacer(Modifier.height(12.dp))
@@ -219,7 +211,7 @@ fun AppsScreen(
             item {
                 Box(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
                     SoftCard(
-                        color = CoralSoft.copy(alpha = 0.7f),
+                        color = colors.tertiaryContainer.copy(alpha = 0.7f),
                         borderColor = Color.Transparent
                     ) {
                         Row(
@@ -229,13 +221,13 @@ fun AppsScreen(
                             Box(
                                 modifier = Modifier
                                     .size(38.dp)
-                                    .background(Coral.copy(alpha = 0.22f), CircleShape),
+                                    .background(colors.tertiary.copy(alpha = 0.22f), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.Lock,
                                     contentDescription = null,
-                                    tint = Ink,
+                                    tint = colors.onSurface,
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
@@ -244,12 +236,12 @@ fun AppsScreen(
                                 Text(
                                     text = "Protection is off",
                                     style = MaterialTheme.typography.titleSmall,
-                                    color = Ink
+                                    color = colors.onSurface
                                 )
                                 Text(
                                     text = "Your choices are saved, but pauses can't appear yet.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MutedInk
+                                    color = colors.onSurfaceVariant
                                 )
                             }
                             Spacer(Modifier.width(10.dp))
@@ -257,7 +249,7 @@ fun AppsScreen(
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                                     contentDescription = "Turn on accessibility",
-                                    tint = Ink
+                                    tint = colors.onSurface
                                 )
                             }
                         }
@@ -270,18 +262,18 @@ fun AppsScreen(
             item {
                 Box(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
                     SoftCard(
-                        color = ButterSoft,
+                        color = colors.tertiaryContainer,
                         borderColor = Color.Transparent
                     ) {
                         Column(modifier = Modifier.padding(18.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    SectionLabel("A place to start", color = Ink.copy(alpha = 0.48f))
+                                    SectionLabel("A place to start", color = colors.onSurface.copy(alpha = 0.48f))
                                     Spacer(Modifier.height(5.dp))
                                     Text(
                                         text = "The usual time thieves",
                                         style = MaterialTheme.typography.headlineSmall,
-                                        color = Ink
+                                        color = colors.onSurface
                                     )
                                 }
                                 Row {
@@ -306,7 +298,7 @@ fun AppsScreen(
                             Text(
                                 text = "${popularSuggestions.size} popular social and entertainment apps are installed on this phone.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Ink.copy(alpha = 0.58f)
+                                color = colors.onSurface.copy(alpha = 0.58f)
                             )
                             Spacer(Modifier.height(13.dp))
                             PrimaryButton(
@@ -315,8 +307,8 @@ fun AppsScreen(
                                     onSelectionChange(selectedPackages + popularSuggestions.map { it.packageName })
                                 },
                                 modifier = Modifier.fillMaxWidth(),
-                                containerColor = Ink,
-                                contentColor = PauseCream
+                                containerColor = colors.onSurface,
+                                contentColor = colors.inverseOnSurface
                             )
                         }
                     }
@@ -342,7 +334,7 @@ fun AppsScreen(
                 Text(
                     text = "${filteredApps.size}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MutedInk.copy(alpha = 0.6f)
+                    color = colors.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             }
         }
@@ -356,7 +348,7 @@ fun AppsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
-                        color = Coral,
+                        color = colors.tertiary,
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(25.dp)
                     )
@@ -374,13 +366,13 @@ fun AppsScreen(
                         Box(
                             modifier = Modifier
                                 .size(50.dp)
-                                .background(ForestMist, CircleShape),
+                                .background(colors.secondaryContainer, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Check,
                                 contentDescription = null,
-                                tint = Ink,
+                                tint = colors.onSurface,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -388,7 +380,7 @@ fun AppsScreen(
                         Text(
                             text = if (protectedOnly) "Nothing protected yet." else "No apps found.",
                             style = MaterialTheme.typography.headlineSmall,
-                            color = Ink
+                            color = colors.onSurface
                         )
                         Spacer(Modifier.height(5.dp))
                         Text(
@@ -398,7 +390,7 @@ fun AppsScreen(
                                 "Try a different name."
                             },
                             style = MaterialTheme.typography.bodySmall,
-                            color = MutedInk
+                            color = colors.onSurfaceVariant
                         )
                     }
                 }
@@ -418,7 +410,7 @@ fun AppsScreen(
                     bottomEnd = if (isLast) 24.dp else 0.dp
                 )
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    Surface(color = SurfaceCream, shape = shape) {
+                    Surface(color = colors.surfaceContainerLow, shape = shape) {
                         Column {
                             AppRow(
                                 app = app,
@@ -440,7 +432,7 @@ fun AppsScreen(
                                         .padding(start = 72.dp)
                                         .fillMaxWidth()
                                         .height(1.dp)
-                                        .background(Line.copy(alpha = 0.65f))
+                                        .background(colors.outlineVariant.copy(alpha = 0.65f))
                                 )
                             }
                         }
@@ -453,7 +445,7 @@ fun AppsScreen(
             Text(
                 text = "One Pause only sees which app is in front. It never reads what's on your screen.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MutedInk.copy(alpha = 0.65f),
+                color = colors.onSurfaceVariant.copy(alpha = 0.65f),
                 modifier = Modifier.padding(horizontal = 26.dp, vertical = 22.dp)
             )
         }
@@ -467,6 +459,7 @@ private fun AppRow(
     isPopular: Boolean,
     onToggle: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -485,7 +478,7 @@ private fun AppRow(
                 Text(
                     text = app.label,
                     style = MaterialTheme.typography.titleMedium,
-                    color = Ink,
+                    color = colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f, fill = false)
@@ -495,9 +488,9 @@ private fun AppRow(
                     Text(
                         text = "POPULAR",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, letterSpacing = 0.9.sp),
-                        color = Coral,
+                        color = colors.tertiary,
                         modifier = Modifier
-                            .background(CoralSoft.copy(alpha = 0.5f), CircleShape)
+                            .background(colors.tertiaryContainer.copy(alpha = 0.5f), CircleShape)
                             .padding(horizontal = 6.dp, vertical = 3.dp)
                     )
                 }
@@ -506,7 +499,7 @@ private fun AppRow(
             Text(
                 text = if (selected) "Pause before opening" else "No pause",
                 style = MaterialTheme.typography.bodySmall,
-                color = if (selected) MutedInk else MutedInk.copy(alpha = 0.6f)
+                color = if (selected) colors.onSurfaceVariant else colors.onSurfaceVariant.copy(alpha = 0.6f)
             )
         }
         Spacer(Modifier.width(10.dp))

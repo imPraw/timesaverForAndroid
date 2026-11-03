@@ -4,6 +4,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.ui.platform.LocalContext
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 
@@ -41,9 +47,21 @@ private val OnePauseShapes = Shapes(
 )
 
 @Composable
-fun OnePauseTheme(content: @Composable () -> Unit) {
+fun OnePauseTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val colors = when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        dark -> darkColorScheme(
+            primary = Sage, onPrimary = Forest, primaryContainer = Forest,
+            onPrimaryContainer = ForestMist, secondary = PausePeach,
+            tertiary = Butter, background = PauseNight, surface = PauseForest,
+            onBackground = PauseCream, onSurface = PauseCream
+        )
+        else -> OnePauseColorScheme
+    }
     MaterialTheme(
-        colorScheme = OnePauseColorScheme,
+        colorScheme = colors,
         typography = OnePauseTypography,
         shapes = OnePauseShapes,
         content = content

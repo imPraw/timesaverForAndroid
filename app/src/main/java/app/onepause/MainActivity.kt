@@ -40,12 +40,13 @@ class MainActivity : ComponentActivity() {
         serviceEnabled = isAccessibilityServiceEnabled(this)
 
         setContent {
-            OnePauseTheme {
+            OnePauseTheme(dark = !onboardingComplete || androidx.compose.foundation.isSystemInDarkTheme()) {
                 val view = LocalView.current
+                val dark = androidx.compose.foundation.isSystemInDarkTheme()
                 SideEffect {
                     WindowCompat.getInsetsController(window, view).apply {
-                        isAppearanceLightStatusBars = onboardingComplete
-                        isAppearanceLightNavigationBars = onboardingComplete
+                        isAppearanceLightStatusBars = onboardingComplete && !dark
+                        isAppearanceLightNavigationBars = onboardingComplete && !dark
                     }
                 }
 

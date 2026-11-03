@@ -23,6 +23,7 @@ import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.GridView
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -54,11 +55,6 @@ import app.onepause.ui.components.NavSurface
 import app.onepause.ui.home.HomeScreen
 import app.onepause.ui.settings.SettingsScreen
 import app.onepause.ui.stats.StatsScreen
-import app.onepause.ui.theme.Coral
-import app.onepause.ui.theme.ForestMist
-import app.onepause.ui.theme.Ink
-import app.onepause.ui.theme.Paper
-import app.onepause.ui.theme.PauseCream
 import app.onepause.util.isAccessibilityServiceEnabled
 import app.onepause.util.openAccessibilitySettings
 
@@ -76,6 +72,7 @@ fun MainShell(
     resumeTick: Int,
     modifier: Modifier = Modifier
 ) {
+    val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
     var selectedTabName by rememberSaveable {
         mutableStateOf(
@@ -114,7 +111,7 @@ fun MainShell(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Paper)
+            .background(colors.background)
     ) {
         BackgroundWash(Modifier.matchParentSize())
 
@@ -197,48 +194,18 @@ private fun BottomNavigation(
     onSelect: (AppTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    NavSurface(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 7.dp, vertical = 7.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            AppTab.entries.forEach { tab ->
-                val isSelected = tab == selected
-                val alpha by animateFloatAsState(
-                    targetValue = if (isSelected) 1f else 0.43f,
-                    animationSpec = tween(180),
-                    label = "navAlpha"
-                )
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(
-                            if (isSelected) Color.White.copy(alpha = 0.075f) else Color.Transparent
-                        )
-                        .clickable { onSelect(tab) }
-                        .padding(vertical = 7.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = tab.icon,
-                        contentDescription = tab.label,
-                        tint = if (isSelected) PauseCream else PauseCream.copy(alpha = alpha),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = tab.label,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 9.sp,
-                            letterSpacing = 0.3.sp
-                        ),
-                        color = if (isSelected) PauseCream else PauseCream.copy(alpha = alpha)
-                    )
-                }
-            }
+    androidx.compose.material3.NavigationBar(
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 0.dp
+    ) {
+        AppTab.entries.forEach { tab ->
+            NavigationBarItem(
+                selected = selected == tab,
+                onClick = { onSelect(tab) },
+                icon = { Icon(tab.icon, contentDescription = null) },
+                label = { Text(tab.label) }
+            )
         }
     }
 }

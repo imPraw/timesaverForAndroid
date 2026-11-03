@@ -45,15 +45,7 @@ import app.onepause.ui.components.BrandMark
 import app.onepause.ui.components.ScreenHeader
 import app.onepause.ui.components.SoftCard
 import app.onepause.ui.components.TextAction
-import app.onepause.ui.theme.Coral
-import app.onepause.ui.theme.ForestMist
-import app.onepause.ui.theme.Ink
-import app.onepause.ui.theme.Line
-import app.onepause.ui.theme.MutedInk
 import app.onepause.ui.theme.OnePauseTheme
-import app.onepause.ui.theme.Paper
-import app.onepause.ui.theme.PauseCream
-import app.onepause.ui.theme.SurfaceCream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -62,8 +54,8 @@ class LicensesActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+            statusBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
         )
 
         setContent {
@@ -81,6 +73,7 @@ private enum class LicenseSection {
 
 @Composable
 private fun LicensesScreen(onBack: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
     var fontLicense by remember { mutableStateOf("") }
     var apacheLicense by remember { mutableStateOf("") }
@@ -107,7 +100,7 @@ private fun LicensesScreen(onBack: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Paper)
+            .background(colors.background)
     ) {
         BackgroundWash(Modifier.matchParentSize())
 
@@ -127,12 +120,12 @@ private fun LicensesScreen(onBack: () -> Unit) {
                         onClick = onBack,
                         modifier = Modifier
                             .size(38.dp)
-                            .background(ForestMist.copy(alpha = 0.7f), CircleShape)
+                            .background(colors.secondaryContainer.copy(alpha = 0.7f), CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                             contentDescription = "Back",
-                            tint = Ink,
+                            tint = colors.onSurface,
                             modifier = Modifier.size(19.dp)
                         )
                     }
@@ -142,7 +135,7 @@ private fun LicensesScreen(onBack: () -> Unit) {
                     Text(
                         text = "ONE PAUSE",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MutedInk,
+                        color = colors.onSurfaceVariant,
                         letterSpacing = 2.sp
                     )
                 }
@@ -197,7 +190,7 @@ private fun LicensesScreen(onBack: () -> Unit) {
                 Text(
                     text = "Android is a trademark of Google LLC. All other names are the property of their respective owners.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedInk.copy(alpha = 0.65f),
+                    color = colors.onSurfaceVariant.copy(alpha = 0.65f),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -215,29 +208,30 @@ private fun AttributionCard(
     action: String? = null,
     onAction: (() -> Unit)? = null
 ) {
+    val colors = MaterialTheme.colorScheme
     SoftCard(
         modifier = Modifier.fillMaxWidth(),
-        color = SurfaceCream,
-        borderColor = Line
+        color = colors.surfaceContainerLow,
+        borderColor = colors.outlineVariant
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                color = Ink
+                color = colors.onSurface
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodySmall,
-                color = MutedInk
+                color = colors.onSurfaceVariant
             )
             if (action != null && onAction != null) {
                 Spacer(Modifier.height(6.dp))
                 TextAction(
                     text = action,
                     onClick = onAction,
-                    color = Coral,
+                    color = colors.tertiary,
                     modifier = Modifier.padding(start = 0.dp)
                 )
             }
@@ -247,15 +241,16 @@ private fun AttributionCard(
 
 @Composable
 private fun LicenseText(text: String) {
+    val colors = MaterialTheme.colorScheme
     SoftCard(
         modifier = Modifier.fillMaxWidth(),
-        color = PauseCream.copy(alpha = 0.7f),
-        borderColor = Line
+        color = colors.inverseOnSurface.copy(alpha = 0.7f),
+        borderColor = colors.outlineVariant
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodySmall,
-            color = MutedInk,
+            color = colors.onSurfaceVariant,
             modifier = Modifier.padding(18.dp)
         )
     }

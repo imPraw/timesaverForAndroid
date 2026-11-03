@@ -50,19 +50,6 @@ import app.onepause.ui.components.SectionLabel
 import app.onepause.ui.components.SoftCard
 import app.onepause.ui.components.TextAction
 import app.onepause.ui.components.rememberAppInfo
-import app.onepause.ui.theme.Butter
-import app.onepause.ui.theme.ButterSoft
-import app.onepause.ui.theme.Coral
-import app.onepause.ui.theme.CoralSoft
-import app.onepause.ui.theme.Forest
-import app.onepause.ui.theme.ForestMist
-import app.onepause.ui.theme.Ink
-import app.onepause.ui.theme.Line
-import app.onepause.ui.theme.MutedInk
-import app.onepause.ui.theme.PausePeach
-import app.onepause.ui.theme.PauseCream
-import app.onepause.ui.theme.Sage
-import app.onepause.ui.theme.SurfaceCream
 import app.onepause.util.formatLongMinutes
 import app.onepause.util.formatMinutes
 import app.onepause.util.pluralize
@@ -83,6 +70,7 @@ fun HomeScreen(
     onPreviewPause: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = MaterialTheme.colorScheme
     val now = remember { LocalTime.now() }
     val greeting = when (now.hour) {
         in 5..11 -> "Good morning."
@@ -112,27 +100,27 @@ fun HomeScreen(
                     Text(
                         text = "ONE PAUSE",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MutedInk,
+                        color = colors.onSurfaceVariant,
                         letterSpacing = 2.sp
                     )
                     Spacer(Modifier.weight(1f))
                     Text(
                         text = dateLabel.uppercase(Locale.getDefault()),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MutedInk.copy(alpha = 0.7f)
+                        color = colors.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                 }
                 Spacer(Modifier.height(26.dp))
                 Text(
                     text = greeting,
                     style = MaterialTheme.typography.displaySmall,
-                    color = Ink
+                    color = colors.onSurface
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "What deserves your attention today?",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
             }
         }
@@ -148,16 +136,20 @@ fun HomeScreen(
                     value = stats.todayPauses.toString(),
                     supporting = pluralize(stats.todayPauses, "pause"),
                     modifier = Modifier.weight(1f),
-                    tint = ButterSoft
+                    tint = colors.tertiaryContainer
                 )
                 MiniMetricCard(
                     label = "Left for later",
                     value = stats.totalAvoided.toString(),
                     supporting = "all time",
                     modifier = Modifier.weight(1f),
-                    tint = ForestMist.copy(alpha = 0.65f)
+                    tint = colors.secondaryContainer.copy(alpha = 0.65f)
                 )
             }
+        }
+
+        item {
+            DailyBloom(stats.todayPauses)
         }
 
         item {
@@ -182,7 +174,7 @@ fun HomeScreen(
                     TextAction(
                         text = "See insights",
                         onClick = onOpenInsights,
-                        color = Ink,
+                        color = colors.onSurface,
                         modifier = Modifier.padding(end = 0.dp)
                     )
                 }
@@ -205,7 +197,7 @@ fun HomeScreen(
                                         .padding(start = 73.dp)
                                         .fillMaxWidth()
                                         .height(1.dp)
-                                        .background(Line.copy(alpha = 0.75f))
+                                        .background(colors.outlineVariant.copy(alpha = 0.75f))
                                 )
                             }
                         }
@@ -228,7 +220,7 @@ fun HomeScreen(
                 Text(
                     text = "The scroll can wait. You don't have to.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedInk.copy(alpha = 0.58f)
+                    color = colors.onSurfaceVariant.copy(alpha = 0.58f)
                 )
             }
         }
@@ -237,6 +229,7 @@ fun HomeScreen(
 
 @Composable
 private fun ReclaimedHero(stats: EventSummary, onOpenInsights: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
     val minutes = stats.weekReclaimedMinutes
     val mainValue: String
     val suffix: String
@@ -261,24 +254,24 @@ private fun ReclaimedHero(stats: EventSummary, onOpenInsights: () -> Unit) {
             .clip(RoundedCornerShape(32.dp))
             .background(
                 Brush.linearGradient(
-                    colors = listOf(Forest, Color(0xFF17372D), Color(0xFF0D261E))
+                    colors = listOf(colors.primaryContainer, colors.primaryContainer)
                 )
             )
             .clickable(onClick = onOpenInsights)
     ) {
         Canvas(Modifier.matchParentSize()) {
             drawCircle(
-                color = PausePeach.copy(alpha = 0.09f),
+                color = colors.onPrimaryContainer.copy(alpha = 0.09f),
                 radius = size.width * 0.42f,
                 center = Offset(size.width * 0.9f, -size.height * 0.06f)
             )
             drawCircle(
-                color = PauseCream.copy(alpha = 0.04f),
+                color = colors.onPrimaryContainer.copy(alpha = 0.04f),
                 radius = size.width * 0.25f,
                 center = Offset(size.width * 0.84f, size.height * 0.92f)
             )
             drawArc(
-                color = PausePeach.copy(alpha = 0.55f),
+                color = colors.onPrimaryContainer.copy(alpha = 0.8f),
                 startAngle = 112f,
                 sweepAngle = 112f,
                 useCenter = false,
@@ -287,7 +280,7 @@ private fun ReclaimedHero(stats: EventSummary, onOpenInsights: () -> Unit) {
                 style = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round)
             )
             drawCircle(
-                color = Butter,
+                color = colors.tertiary,
                 radius = 3.2.dp.toPx(),
                 center = Offset(size.width * 0.86f, size.height * 0.17f)
             )
@@ -297,7 +290,7 @@ private fun ReclaimedHero(stats: EventSummary, onOpenInsights: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 SectionLabel(
                     text = "Time reclaimed this week",
-                    color = PauseCream.copy(alpha = 0.48f)
+                    color = colors.onPrimaryContainer.copy(alpha = 0.8f)
                 )
                 Spacer(Modifier.weight(1f))
                 Pill(
@@ -307,7 +300,7 @@ private fun ReclaimedHero(stats: EventSummary, onOpenInsights: () -> Unit) {
                         "A fresh start"
                     },
                     background = Color.White.copy(alpha = 0.06f),
-                    contentColor = PauseCream.copy(alpha = 0.82f),
+                    contentColor = colors.onPrimaryContainer.copy(alpha = 0.82f),
                     borderColor = Color.White.copy(alpha = 0.11f)
                 )
             }
@@ -316,14 +309,14 @@ private fun ReclaimedHero(stats: EventSummary, onOpenInsights: () -> Unit) {
                 Text(
                     text = mainValue,
                     style = MaterialTheme.typography.displayLarge.copy(fontSize = 64.sp, lineHeight = 64.sp),
-                    color = PauseCream
+                    color = colors.onPrimaryContainer
                 )
                 if (suffix.isNotEmpty()) {
                     Spacer(Modifier.width(9.dp))
                     Text(
                         text = suffix,
                         style = MaterialTheme.typography.headlineMedium,
-                        color = PauseCream.copy(alpha = 0.55f),
+                        color = colors.onPrimaryContainer.copy(alpha = 0.8f),
                         modifier = Modifier.padding(bottom = 7.dp)
                     )
                 }
@@ -331,12 +324,12 @@ private fun ReclaimedHero(stats: EventSummary, onOpenInsights: () -> Unit) {
             Spacer(Modifier.height(10.dp))
             Text(
                 text = if (stats.weekPauses == 0) {
-                    "No pauses yet this week. The first one is the hardest."
+                    "A little pause. A little more room for you."
                 } else {
                     "${stats.weekPauses} ${pluralize(stats.weekPauses, "intentional pause")} · ${stats.weekAvoided} closed instead"
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                color = PauseCream.copy(alpha = 0.52f)
+                color = colors.onPrimaryContainer.copy(alpha = 0.8f)
             )
             Spacer(Modifier.height(24.dp))
             Box(
@@ -350,20 +343,20 @@ private fun ReclaimedHero(stats: EventSummary, onOpenInsights: () -> Unit) {
                 Icon(
                     imageVector = Icons.Rounded.Timer,
                     contentDescription = null,
-                    tint = PausePeach,
+                    tint = colors.onPrimaryContainer,
                     modifier = Modifier.size(15.dp)
                 )
                 Spacer(Modifier.width(7.dp))
                 Text(
                     text = "An estimate, based on your settings",
                     style = MaterialTheme.typography.bodySmall,
-                    color = PauseCream.copy(alpha = 0.37f)
+                    color = colors.onPrimaryContainer.copy(alpha = 0.8f)
                 )
                 Spacer(Modifier.weight(1f))
                 Icon(
                     imageVector = Icons.Rounded.ChevronRight,
                     contentDescription = "Open insights",
-                    tint = PauseCream.copy(alpha = 0.45f),
+                    tint = colors.onPrimaryContainer.copy(alpha = 0.45f),
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -379,25 +372,26 @@ private fun MiniMetricCard(
     modifier: Modifier = Modifier,
     tint: Color
 ) {
+    val colors = MaterialTheme.colorScheme
     SoftCard(modifier = modifier, color = tint, borderColor = Color.Transparent) {
         Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp)) {
             Text(
                 text = label.uppercase(Locale.getDefault()),
                 style = MaterialTheme.typography.labelSmall,
-                color = Ink.copy(alpha = 0.47f)
+                color = colors.onSurfaceVariant
             )
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     text = value,
                     style = MaterialTheme.typography.headlineMedium,
-                    color = Ink
+                    color = colors.onSurface
                 )
                 Spacer(Modifier.width(5.dp))
                 Text(
                     text = supporting,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Ink.copy(alpha = 0.5f),
+                    color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 4.dp),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -414,11 +408,12 @@ private fun ProtectionCard(
     onManageApps: () -> Unit,
     onEnableProtection: () -> Unit
 ) {
+    val colors = MaterialTheme.colorScheme
     val needsSetup = !serviceEnabled || blockedCount == 0
     val background = when {
-        !serviceEnabled -> CoralSoft.copy(alpha = 0.7f)
-        blockedCount == 0 -> ButterSoft
-        else -> SurfaceCream
+        !serviceEnabled -> colors.tertiaryContainer.copy(alpha = 0.7f)
+        blockedCount == 0 -> colors.tertiaryContainer
+        else -> colors.surfaceContainerLow
     }
     val onClick = if (!serviceEnabled) onEnableProtection else onManageApps
     SoftCard(
@@ -426,7 +421,7 @@ private fun ProtectionCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         color = background,
-        borderColor = if (needsSetup) Color.Transparent else Line
+        borderColor = if (needsSetup) Color.Transparent else colors.outlineVariant
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 17.dp, vertical = 16.dp),
@@ -437,9 +432,9 @@ private fun ProtectionCard(
                     .size(44.dp)
                     .background(
                         when {
-                            !serviceEnabled -> Coral.copy(alpha = 0.2f)
-                            blockedCount == 0 -> Butter.copy(alpha = 0.55f)
-                            else -> ForestMist
+                            !serviceEnabled -> colors.tertiary.copy(alpha = 0.2f)
+                            blockedCount == 0 -> colors.tertiary.copy(alpha = 0.55f)
+                            else -> colors.secondaryContainer
                         },
                         CircleShape
                     ),
@@ -448,7 +443,7 @@ private fun ProtectionCard(
                 Icon(
                     imageVector = if (!serviceEnabled) Icons.Rounded.Lock else Icons.Rounded.Check,
                     contentDescription = null,
-                    tint = Ink,
+                    tint = colors.onSurface,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -461,7 +456,7 @@ private fun ProtectionCard(
                         else -> "Protection is on"
                     },
                     style = MaterialTheme.typography.titleMedium,
-                    color = Ink
+                    color = colors.onSurface
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
@@ -471,27 +466,27 @@ private fun ProtectionCard(
                         else -> "One breath before ${blockedCount} ${pluralize(blockedCount, "app")} ${if (blockedCount == 1) "opens" else "open"}."
                     },
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
             }
             Spacer(Modifier.width(10.dp))
             if (needsSetup) {
                 Row(
                     modifier = Modifier
-                        .background(if (!serviceEnabled) Coral else Ink, CircleShape)
+                        .background(if (!serviceEnabled) colors.tertiary else colors.onSurface, CircleShape)
                         .padding(horizontal = 13.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = if (!serviceEnabled) "Turn on" else "Choose",
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (!serviceEnabled) Ink else PauseCream
+                        color = if (!serviceEnabled) colors.onTertiary else colors.inverseOnSurface
                     )
                     Spacer(Modifier.width(5.dp))
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                         contentDescription = null,
-                        tint = if (!serviceEnabled) Ink else PauseCream,
+                        tint = if (!serviceEnabled) colors.onTertiary else colors.inverseOnSurface,
                         modifier = Modifier.size(13.dp)
                     )
                 }
@@ -499,7 +494,7 @@ private fun ProtectionCard(
                 Icon(
                     imageVector = Icons.Rounded.ChevronRight,
                     contentDescription = "Manage protected apps",
-                    tint = MutedInk,
+                    tint = colors.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -509,33 +504,34 @@ private fun ProtectionCard(
 
 @Composable
 private fun PracticeCard(pauseSeconds: Int, onPreviewPause: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
     SoftCard(
         modifier = Modifier.fillMaxWidth(),
-        color = SurfaceCream
+        color = colors.surfaceContainerLow
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                SectionLabel("A small experiment")
+                SectionLabel("Your reset button")
                 Spacer(Modifier.height(7.dp))
                 Text(
-                    text = "See how a pause feels.",
+                    text = "Take a mini breather.",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = Ink
+                    color = colors.onSurface
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "A ${pauseSeconds}-second breath, just for practice.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
                 Spacer(Modifier.height(10.dp))
                 TextAction(
                     text = "Try a pause",
                     onClick = onPreviewPause,
-                    color = Coral,
+                    color = colors.tertiary,
                     modifier = Modifier.padding(start = 0.dp, end = 0.dp)
                 )
             }
@@ -545,7 +541,7 @@ private fun PracticeCard(pauseSeconds: Int, onPreviewPause: () -> Unit) {
                     .size(74.dp)
                     .background(
                         Brush.radialGradient(
-                            listOf(Color(0xFFF7CCB3), Coral),
+                            listOf(colors.tertiaryContainer, colors.tertiary),
                             center = Offset(28f, 24f),
                             radius = 90f
                         ),
@@ -553,7 +549,7 @@ private fun PracticeCard(pauseSeconds: Int, onPreviewPause: () -> Unit) {
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                BrandMark(size = 36.dp, accent = PauseCream)
+                BrandMark(size = 36.dp, accent = colors.inverseOnSurface)
             }
         }
     }

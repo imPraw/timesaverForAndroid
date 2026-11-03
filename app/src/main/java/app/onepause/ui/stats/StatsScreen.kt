@@ -51,17 +51,6 @@ import app.onepause.ui.components.SectionLabel
 import app.onepause.ui.components.SoftCard
 import app.onepause.ui.components.TextAction
 import app.onepause.ui.components.rememberAppInfo
-import app.onepause.ui.theme.Butter
-import app.onepause.ui.theme.ButterSoft
-import app.onepause.ui.theme.Coral
-import app.onepause.ui.theme.CoralSoft
-import app.onepause.ui.theme.ForestMist
-import app.onepause.ui.theme.Ink
-import app.onepause.ui.theme.Line
-import app.onepause.ui.theme.MutedInk
-import app.onepause.ui.theme.PauseCream
-import app.onepause.ui.theme.Sage
-import app.onepause.ui.theme.SurfaceCream
 import app.onepause.util.formatLongMinutes
 import app.onepause.util.formatPercent
 import app.onepause.util.pluralize
@@ -76,6 +65,7 @@ fun StatsScreen(
     onAdjustEstimate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = MaterialTheme.colorScheme
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -93,7 +83,7 @@ fun StatsScreen(
 
         if (stats.totalPauses == 0) {
             item {
-                SoftCard(color = ButterSoft, borderColor = Color.Transparent) {
+                SoftCard(color = colors.tertiaryContainer, borderColor = Color.Transparent) {
                     Column(
                         modifier = Modifier.padding(horizontal = 24.dp, vertical = 28.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -103,7 +93,7 @@ fun StatsScreen(
                                 .size(78.dp)
                                 .background(
                                     Brush.radialGradient(
-                                        colors = listOf(Color(0xFFF8D4BD), Coral),
+                                        colors = listOf(colors.tertiaryContainer, colors.tertiary),
                                         center = Offset(30f, 24f),
                                         radius = 110f
                                     ),
@@ -111,20 +101,20 @@ fun StatsScreen(
                                 ),
                             contentAlignment = Alignment.Center
                         ) {
-                            BrandMark(size = 38.dp, accent = PauseCream)
+                            BrandMark(size = 38.dp, accent = colors.inverseOnSurface)
                         }
                         Spacer(Modifier.height(18.dp))
                         Text(
                             text = "Your first pause starts the story.",
                             style = MaterialTheme.typography.headlineMedium,
-                            color = Ink,
+                            color = colors.onSurface,
                             textAlign = TextAlign.Center
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
                             text = "As soon as you pause or close a protected app, your time and patterns will show up here.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MutedInk,
+                            color = colors.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                         Spacer(Modifier.height(20.dp))
@@ -152,14 +142,14 @@ fun StatsScreen(
                     value = "${stats.weekPauses}",
                     detail = pluralize(stats.weekPauses, "pause"),
                     modifier = Modifier.weight(1f),
-                    tint = ForestMist
+                    tint = colors.secondaryContainer
                 )
                 SmallStat(
                     label = "Closed instead",
                     value = formatPercent(stats.totalAvoided, stats.totalPauses),
                     detail = "${stats.totalAvoided} ${pluralize(stats.totalAvoided, "session")}",
                     modifier = Modifier.weight(1f),
-                    tint = ButterSoft
+                    tint = colors.tertiaryContainer
                 )
             }
         }
@@ -188,7 +178,7 @@ fun StatsScreen(
                                         .padding(horizontal = 16.dp)
                                         .fillMaxWidth()
                                         .height(1.dp)
-                                        .background(Line.copy(alpha = 0.65f))
+                                        .background(colors.outlineVariant.copy(alpha = 0.65f))
                                 )
                             }
                         }
@@ -198,25 +188,25 @@ fun StatsScreen(
         }
 
         item {
-            SoftCard(color = SurfaceCream) {
+            SoftCard(color = colors.surfaceContainerLow) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Text(
                         text = "How this is counted",
                         style = MaterialTheme.typography.titleMedium,
-                        color = Ink
+                        color = colors.onSurface
                     )
                     Spacer(Modifier.height(5.dp))
                     Text(
                         text = "“Time reclaimed” is an estimate: each app session you close after a pause counts as $reclaimedMinutesPerSkip minutes back. It isn't tracked screen time.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MutedInk
+                        color = colors.onSurfaceVariant
                     )
                     Spacer(Modifier.height(10.dp))
                     TextAction(
                         text = "Adjust the estimate",
                         onClick = onAdjustEstimate,
                         modifier = Modifier.padding(start = 0.dp),
-                        color = Coral
+                        color = colors.tertiary
                     )
                 }
             }
@@ -226,30 +216,31 @@ fun StatsScreen(
 
 @Composable
 private fun TotalCard(stats: EventSummary) {
+    val colors = MaterialTheme.colorScheme
     SoftCard(
         modifier = Modifier.fillMaxWidth(),
-        color = SurfaceCream
+        color = colors.surfaceContainerLow
     ) {
         Box {
             Canvas(Modifier.matchParentSize()) {
                 drawCircle(
-                    color = Coral.copy(alpha = 0.06f),
+                    color = colors.tertiary.copy(alpha = 0.06f),
                     radius = size.width * 0.42f,
                     center = Offset(size.width * 0.95f, size.height * 0.22f)
                 )
                 drawCircle(
-                    color = Sage.copy(alpha = 0.1f),
+                    color = colors.secondary.copy(alpha = 0.1f),
                     radius = size.width * 0.28f,
                     center = Offset(size.width * 0.86f, size.height * 0.96f)
                 )
             }
             Column(modifier = Modifier.padding(23.dp)) {
-                SectionLabel("Reclaimed all time", color = MutedInk)
+                SectionLabel("Reclaimed all time", color = colors.onSurfaceVariant)
                 Spacer(Modifier.height(9.dp))
                 Text(
                     text = formatLongMinutes(stats.allTimeReclaimedMinutes),
                     style = MaterialTheme.typography.displayMedium,
-                    color = Ink,
+                    color = colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -257,13 +248,13 @@ private fun TotalCard(stats: EventSummary) {
                 Text(
                     text = "across ${stats.totalPauses} ${pluralize(stats.totalPauses, "intentional pause")}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
                 Spacer(Modifier.height(20.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(PaperTint, RoundedCornerShape(16.dp))
+                        .background(colors.surfaceContainerHigh, RoundedCornerShape(16.dp))
                         .padding(vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -278,10 +269,11 @@ private fun TotalCard(stats: EventSummary) {
     }
 }
 
-private val PaperTint = Color(0xFFF8F2E7)
+
 
 @Composable
 private fun TotalPart(value: String, label: String, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -289,13 +281,13 @@ private fun TotalPart(value: String, label: String, modifier: Modifier = Modifie
         Text(
             text = value,
             style = MaterialTheme.typography.headlineSmall,
-            color = Ink
+            color = colors.onSurface
         )
         Spacer(Modifier.height(2.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MutedInk,
+            color = colors.onSurfaceVariant,
             maxLines = 1
         )
     }
@@ -303,11 +295,12 @@ private fun TotalPart(value: String, label: String, modifier: Modifier = Modifie
 
 @Composable
 private fun TotalDivider() {
+    val colors = MaterialTheme.colorScheme
     Box(
         Modifier
             .height(30.dp)
             .width(1.dp)
-            .background(Line)
+            .background(colors.outlineVariant)
     )
 }
 
@@ -319,24 +312,25 @@ private fun SmallStat(
     modifier: Modifier = Modifier,
     tint: Color
 ) {
+    val colors = MaterialTheme.colorScheme
     SoftCard(
         modifier = modifier,
         color = tint.copy(alpha = 0.62f),
         borderColor = Color.Transparent
     ) {
         Column(modifier = Modifier.padding(17.dp)) {
-            SectionLabel(label, color = Ink.copy(alpha = 0.45f))
+            SectionLabel(label, color = colors.onSurface.copy(alpha = 0.45f))
             Spacer(Modifier.height(8.dp))
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineMedium,
-                color = Ink
+                color = colors.onSurface
             )
             Spacer(Modifier.height(1.dp))
             Text(
                 text = detail,
                 style = MaterialTheme.typography.bodySmall,
-                color = MutedInk,
+                color = colors.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -346,10 +340,11 @@ private fun SmallStat(
 
 @Composable
 private fun WeekChartCard(stats: EventSummary) {
+    val colors = MaterialTheme.colorScheme
     val maxCount = maxOf(1, stats.lastSevenDays.maxOfOrNull { it.pauses } ?: 0)
     SoftCard(
         modifier = Modifier.fillMaxWidth(),
-        color = SurfaceCream
+        color = colors.surfaceContainerLow
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -359,12 +354,12 @@ private fun WeekChartCard(stats: EventSummary) {
                     Text(
                         text = "${stats.lastSevenDays.sumOf { it.pauses }} ${pluralize(stats.lastSevenDays.sumOf { it.pauses }, "pause")}",
                         style = MaterialTheme.typography.titleLarge,
-                        color = Ink
+                        color = colors.onSurface
                     )
                 }
                 Pill(
                     text = "This week",
-                    background = ForestMist.copy(alpha = 0.55f),
+                    background = colors.secondaryContainer.copy(alpha = 0.55f),
                     borderColor = Color.Transparent
                 )
             }
@@ -394,6 +389,7 @@ private fun DayBar(
     isToday: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val colors = MaterialTheme.colorScheme
     val fraction = (day.pauses.toFloat() / maxCount.toFloat()).coerceIn(0f, 1f)
     val barHeight by animateFloatAsState(
         targetValue = (if (day.pauses == 0) 0.035f else fraction.coerceAtLeast(0.11f)),
@@ -401,9 +397,9 @@ private fun DayBar(
         label = "barHeight"
     )
     val barColor = when {
-        isToday -> Coral
-        day.avoided > 0 -> Sage
-        else -> Ink.copy(alpha = 0.3f)
+        isToday -> colors.tertiary
+        day.avoided > 0 -> colors.secondary
+        else -> colors.onSurface.copy(alpha = 0.3f)
     }
     val dayLabel = day.date.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault())
 
@@ -414,7 +410,7 @@ private fun DayBar(
         Text(
             text = if (day.pauses > 0) day.pauses.toString() else "",
             style = MaterialTheme.typography.labelSmall,
-            color = if (isToday) Ink else MutedInk.copy(alpha = 0.55f)
+            color = if (isToday) colors.onSurface else colors.onSurfaceVariant.copy(alpha = 0.55f)
         )
         Spacer(Modifier.weight(1f))
         Box(
@@ -428,13 +424,13 @@ private fun DayBar(
         Box(
             modifier = Modifier
                 .size(24.dp)
-                .background(if (isToday) Ink else Color.Transparent, CircleShape),
+                .background(if (isToday) colors.onSurface else Color.Transparent, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = dayLabel,
                 style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.sp),
-                color = if (isToday) PauseCream else MutedInk.copy(alpha = 0.65f)
+                color = if (isToday) colors.inverseOnSurface else colors.onSurfaceVariant.copy(alpha = 0.65f)
             )
         }
     }
@@ -442,9 +438,10 @@ private fun DayBar(
 
 @Composable
 private fun WeeklyReflection(stats: EventSummary) {
+    val colors = MaterialTheme.colorScheme
     val difference = stats.weekAvoided - stats.lastWeekAvoided
     SoftCard(
-        color = if (difference >= 0) ButterSoft else CoralSoft.copy(alpha = 0.5f),
+        color = if (difference >= 0) colors.tertiaryContainer else colors.tertiaryContainer.copy(alpha = 0.5f),
         borderColor = Color.Transparent
     ) {
         Row(
@@ -460,7 +457,7 @@ private fun WeeklyReflection(stats: EventSummary) {
                 Text(
                     text = if (difference >= 0) "+" else "",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = Ink
+                    color = colors.onSurface
                 )
             }
             Spacer(Modifier.width(12.dp))
@@ -476,13 +473,13 @@ private fun WeeklyReflection(stats: EventSummary) {
                         else -> "Holding steady from last week."
                     },
                     style = MaterialTheme.typography.titleSmall,
-                    color = Ink
+                    color = colors.onSurface
                 )
                 Spacer(Modifier.height(3.dp))
                 Text(
                     text = "${stats.weekAvoided} this week · ${stats.lastWeekAvoided} last week",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
             }
         }
@@ -491,6 +488,7 @@ private fun WeeklyReflection(stats: EventSummary) {
 
 @Composable
 private fun AppStatRow(appStat: AppStat, maxPauses: Int) {
+    val colors = MaterialTheme.colorScheme
     val info = rememberAppInfo(appStat.packageName)
     val progress by animateFloatAsState(
         targetValue = (appStat.pauses.toFloat() / maxPauses.toFloat()).coerceIn(0f, 1f),
@@ -510,7 +508,7 @@ private fun AppStatRow(appStat: AppStat, maxPauses: Int) {
                 Text(
                     text = info.label,
                     style = MaterialTheme.typography.titleSmall,
-                    color = Ink,
+                    color = colors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -518,7 +516,7 @@ private fun AppStatRow(appStat: AppStat, maxPauses: Int) {
                 Text(
                     text = "${appStat.pauses}",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MutedInk
+                    color = colors.onSurfaceVariant
                 )
             }
             Spacer(Modifier.height(7.dp))
@@ -526,20 +524,20 @@ private fun AppStatRow(appStat: AppStat, maxPauses: Int) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(4.dp)
-                    .background(Line.copy(alpha = 0.55f), CircleShape)
+                    .background(colors.outlineVariant.copy(alpha = 0.55f), CircleShape)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(progress)
                         .height(4.dp)
-                        .background(if (appStat.avoided > 0) Coral else Sage, CircleShape)
+                        .background(if (appStat.avoided > 0) colors.tertiary else colors.secondary, CircleShape)
                 )
             }
             Spacer(Modifier.height(5.dp))
             Text(
                 text = "${appStat.avoided} of ${appStat.pauses} closed instead",
                 style = MaterialTheme.typography.bodySmall,
-                color = MutedInk.copy(alpha = 0.67f)
+                color = colors.onSurfaceVariant.copy(alpha = 0.67f)
             )
         }
     }
@@ -547,18 +545,19 @@ private fun AppStatRow(appStat: AppStat, maxPauses: Int) {
 
 @Composable
 private fun HowStatsWorkCard() {
-    SoftCard(color = SurfaceCream) {
+    val colors = MaterialTheme.colorScheme
+    SoftCard(color = colors.surfaceContainerLow) {
         Column(modifier = Modifier.padding(18.dp)) {
             Text(
                 text = "Your data stays here.",
                 style = MaterialTheme.typography.titleMedium,
-                color = Ink
+                color = colors.onSurface
             )
             Spacer(Modifier.height(5.dp))
             Text(
                 text = "Pause history lives only on this phone. No account, no analytics, and no internet permission.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MutedInk
+                color = colors.onSurfaceVariant
             )
         }
     }

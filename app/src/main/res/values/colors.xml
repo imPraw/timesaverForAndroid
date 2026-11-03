@@ -3,4 +3,5 @@
     <color name="warm_paper">#F5F0E6</color>
     <color name="forest_deep">#0B241C</color>
     <color name="launcher_background">#17382F</color>
+    <bool name="light_system_bars">true</bool>
 </resources>
