@@ -46,6 +46,11 @@ import app.onepause.ui.components.ScreenHeader
 import app.onepause.ui.components.SoftCard
 import app.onepause.ui.components.TextAction
 import app.onepause.ui.theme.OnePauseTheme
+import app.onepause.ui.theme.isDarkAppearance
+import app.onepause.data.AppPreferences
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -59,7 +64,15 @@ class LicensesActivity : ComponentActivity() {
         )
 
         setContent {
-            OnePauseTheme {
+            val dark = isDarkAppearance(AppPreferences(this).appearanceMode)
+            OnePauseTheme(dark = dark) {
+                val view = LocalView.current
+                SideEffect {
+                    WindowCompat.getInsetsController(window, view).apply {
+                        isAppearanceLightStatusBars = !dark
+                        isAppearanceLightNavigationBars = !dark
+                    }
+                }
                 LicensesScreen(onBack = { finish() })
             }
         }

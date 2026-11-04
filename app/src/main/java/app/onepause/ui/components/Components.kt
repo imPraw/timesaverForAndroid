@@ -12,6 +12,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +37,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Language
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,12 +52,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -113,6 +122,14 @@ fun AppIcon(
     size: Dp = 48.dp
 ) {
     val colors = MaterialTheme.colorScheme
+    if (packageName.startsWith("website:")) {
+        Box(modifier = modifier.size(size).clip(RoundedCornerShape(size * 0.27f))
+            .background(colors.primaryContainer), contentAlignment = Alignment.Center) {
+            Icon(Icons.Rounded.Language, contentDescription = null, tint = colors.onPrimaryContainer,
+                modifier = Modifier.size(size * 0.52f))
+        }
+        return
+    }
     val imageBitmap = remember(icon, packageName) {
         icon?.let { drawable ->
             runCatching {
@@ -126,8 +143,8 @@ fun AppIcon(
             colors.secondaryContainer,
             colors.tertiaryContainer,
             colors.primaryContainer,
-            Color(0xFFD9E4E8),
-            Color(0xFFE8DDD1)
+            colors.surfaceContainerHigh,
+            colors.surfaceContainerHighest
         )
         palette[(packageName.hashCode() and Int.MAX_VALUE) % palette.size]
     }
@@ -163,7 +180,7 @@ fun AppIcon(
 fun rememberAppInfo(packageName: String): LightAppInfo {
     val context = LocalContext.current
     var info by remember(packageName) {
-        mutableStateOf(LightAppInfo(packageName, packageName, null))
+        mutableStateOf(LightAppInfo(packageName, packageName.removePrefix("website:"), null))
     }
     LaunchedEffect(packageName) {
         info = withContext(Dispatchers.IO) { loadLightAppInfo(context, packageName) }
@@ -187,13 +204,14 @@ fun ScreenHeader(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = overline.uppercase(Locale.getDefault()),
+                text = overline,
                 style = MaterialTheme.typography.labelSmall,
                 color = colors.onSurfaceVariant
             )
-            Spacer(Modifier.height(9.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 text = title,
+                modifier = Modifier.semantics { heading() },
                 style = MaterialTheme.typography.headlineLarge,
                 color = colors.onSurface
             )
@@ -220,9 +238,9 @@ fun SectionLabel(
     color: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
     Text(
-        text = text.uppercase(Locale.getDefault()),
-        modifier = modifier,
-        style = MaterialTheme.typography.labelSmall,
+        text = text,
+        modifier = modifier.semantics { heading() },
+        style = MaterialTheme.typography.titleSmall,
         color = color
     )
 }
@@ -261,11 +279,20 @@ fun PrimaryButton(
     containerColor: Color = MaterialTheme.colorScheme.primary,
     contentColor: Color = MaterialTheme.colorScheme.onPrimary
 ) {
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectIsPressedAsState()
+    val scale = androidx.compose.animation.core.animateFloatAsState(
+        if (pressed) 0.98f else 1f, animationSpec = tween(120), label = "buttonPress"
+    )
     Button(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 56.dp),
+        modifier = modifier.heightIn(min = 54.dp).graphicsLayer {
+            scaleX = scale.value
+            scaleY = scale.value
+        },
+        interactionSource = interactions,
         enabled = enabled,
-        shape = CircleShape,
+        shape = RoundedCornerShape(16.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
@@ -287,25 +314,17 @@ fun TextAction(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onSurface,
+    color: Color = MaterialTheme.colorScheme.primary,
     enabled: Boolean = true,
     textAlign: TextAlign? = null
 ) {
-    Text(
-        text = text,
-        modifier = modifier
-            .clip(CircleShape)
-            .clickable(
-                enabled = enabled,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            )
-            .padding(vertical = 10.dp, horizontal = 8.dp),
-        color = if (enabled) color else color.copy(alpha = 0.38f),
-        style = MaterialTheme.typography.labelLarge,
-        textAlign = textAlign
-    )
+    TextButton(onClick = onClick, enabled = enabled,
+        modifier = modifier.heightIn(min = 48.dp),
+        shape = RoundedCornerShape(12.dp),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+        colors = ButtonDefaults.textButtonColors(contentColor = color)) {
+        Text(text, style = MaterialTheme.typography.labelLarge, textAlign = textAlign)
+    }
 }
 
 @Composable
@@ -326,9 +345,9 @@ fun SoftCard(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(22.dp),
         color = color,
-        border = BorderStroke(1.dp, borderColor)
+        border = BorderStroke(0.5.dp, borderColor.copy(alpha = borderColor.alpha * 0.45f))
     ) {
         content()
     }
@@ -343,26 +362,26 @@ fun ChoiceChip(
 ) {
     val colors = MaterialTheme.colorScheme
     val background by animateColorAsState(
-        if (selected) colors.onSurface else Color.Transparent,
+        if (selected) colors.primaryContainer else colors.surfaceContainer,
         animationSpec = tween(180),
         label = "chipBackground"
     )
     val contentColor by animateColorAsState(
-        if (selected) colors.inverseOnSurface else colors.onSurface,
+        if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
         animationSpec = tween(180),
         label = "chipContent"
     )
     val borderColor by animateColorAsState(
-        if (selected) colors.onSurface else colors.outlineVariant,
+        if (selected) colors.primary.copy(alpha = 0.3f) else Color.Transparent,
         animationSpec = tween(180),
         label = "chipBorder"
     )
     Box(
         modifier = modifier
-            .clip(CircleShape)
+            .clip(RoundedCornerShape(12.dp))
             .background(background)
-            .border(BorderStroke(1.dp, borderColor), CircleShape)
-            .clickable(onClick = onClick)
+            .border(BorderStroke(1.dp, borderColor), RoundedCornerShape(12.dp))
+            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
             .heightIn(min = 48.dp)
             .padding(horizontal = 16.dp, vertical = 11.dp),
         contentAlignment = Alignment.Center
@@ -508,8 +527,8 @@ fun SurfaceDivider(modifier: Modifier = Modifier, color: Color = MaterialTheme.c
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(1.dp)
-            .background(color.copy(alpha = 0.85f))
+            .height(0.5.dp)
+            .background(color.copy(alpha = color.alpha * 0.85f))
     )
 }
 
@@ -533,7 +552,7 @@ fun BackgroundWash(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         drawCircle(
             brush = Brush.radialGradient(
-                listOf(colors.tertiary.copy(alpha = 0.22f), Color.Transparent),
+                listOf(colors.primary.copy(alpha = 0.025f), Color.Transparent),
                 center = Offset(size.width * 0.92f, size.height * 0.08f),
                 radius = size.width * 0.52f
             ),
@@ -542,7 +561,7 @@ fun BackgroundWash(modifier: Modifier = Modifier) {
         )
         drawCircle(
             brush = Brush.radialGradient(
-                listOf(colors.secondary.copy(alpha = 0.17f), Color.Transparent),
+                listOf(colors.primary.copy(alpha = 0.015f), Color.Transparent),
                 center = Offset(size.width * 0.04f, size.height * 0.36f),
                 radius = size.width * 0.6f
             ),

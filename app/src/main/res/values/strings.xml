@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">One Pause</string>
     <string name="accessibility_service_label">One Pause app protection</string>
-    <string name="accessibility_service_description">One Pause notices when you open an app you chose to protect and shows a short breathing pause before you continue. It never reads screen content, keystrokes, or personal data, and everything stays on your device.</string>
+    <string name="accessibility_service_description">One Pause notices when you open an app you chose to protect and shows a short breathing pause before you continue. For website protection it also checks supported browser address bars against your chosen domains. Data stays on your device.</string>
     <string name="uninstall_guard_label">One Pause uninstall guard</string>
     <string name="uninstall_guard_description">Adds a deactivation step before uninstalling One Pause. This does not make removal impossible. You can deactivate the guard in Android Settings at any time. No password, screen lock, or erase-device controls are requested.</string>
     <string name="uninstall_guard_disable_message">Turning this off removes the extra uninstall step. App protection continues until you disable its accessibility service.</string>

@@ -5,10 +5,16 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -23,7 +29,7 @@ internal fun UninstallGuardCard(serviceEnabled: Boolean, onOpenProtection: () ->
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var active by remember { mutableStateOf(UninstallGuard.isActive(context)) }
     var refresh by remember { mutableIntStateOf(0) }
-    var explain by remember { mutableStateOf(false) }
+    var explain by rememberSaveable { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         refresh++ // Read Android's state; cancelling consent never turns the guard on.
@@ -45,32 +51,41 @@ internal fun UninstallGuardCard(serviceEnabled: Boolean, onOpenProtection: () ->
     }
     SoftCard {
         Column(Modifier.fillMaxWidth().padding(20.dp)) {
-            Text("Uninstall guard", style = MaterialTheme.typography.titleLarge)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Uninstall guard", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    if (active) "On" else "Off",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Spacer(Modifier.height(8.dp))
             Text(
-                if (active) "On · an extra step before uninstalling" else "Off · optional extra friction",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Android asks you to deactivate this guard before removing One Pause. It is not a permanent lock: you can always deactivate it in Android Settings.",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Turn off app protection in Accessibility to release the guard. If Android has stopped One Pause, reopen it to finish. Turning protection on again requires your approval to restore the guard.",
+                "An optional extra step before uninstalling. Android asks you to deactivate the guard first; you can always do this in Android Settings.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(Modifier.height(12.dp))
-            FilledTonalButton(onClick = {
-                error = null
-                if (active || !serviceEnabled) onOpenProtection() else explain = true
-            }) {
+            if (active) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Turning off protection in Accessibility releases the guard. If Android stopped One Pause, reopen it to finish. Restoring the guard needs your approval again.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+            FilledTonalButton(
+                onClick = {
+                    error = null
+                    if (active || !serviceEnabled) onOpenProtection() else explain = true
+                },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
                 Text(when {
-                    active -> "Turn off protection to remove guard"
-                    !serviceEnabled -> "Enable app protection first"
+                    active -> "Manage protection"
+                    !serviceEnabled -> "Enable protection first"
                     else -> "Set up uninstall guard"
                 })
             }
@@ -78,9 +93,13 @@ internal fun UninstallGuardCard(serviceEnabled: Boolean, onOpenProtection: () ->
                 TextButton(onClick = {
                     runCatching { context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS)) }
                         .onFailure { error = "Open Android Settings and search for Device admin apps to deactivate the guard." }
-                }) { Text("Manage in Android Settings") }
+                }, modifier = Modifier.fillMaxWidth()) { Text("Manage in Android Settings") }
             }
-            error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+            error?.let {
+                Spacer(Modifier.height(8.dp))
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            }
         }
     }
     if (explain) {
@@ -93,7 +112,7 @@ internal fun UninstallGuardCard(serviceEnabled: Boolean, onOpenProtection: () ->
                     explain = false
                     runCatching { launcher.launch(UninstallGuard.activationIntent(context)) }
                         .onFailure { error = "This phone could not open device administrator setup. The guard is still off." }
-                }) { Text("Continue to Android setup") }
+                }) { Text("Continue") }
             },
             dismissButton = { TextButton(onClick = { explain = false }) { Text("Not now") } }
         )

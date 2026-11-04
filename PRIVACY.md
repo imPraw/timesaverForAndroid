@@ -8,8 +8,8 @@ One Pause is a local-first Android app that helps you pause before opening distr
 
 - One Pause collects **no data** and has **no internet permission**.
 - There is no account, advertising, analytics, crash reporting, or telemetry.
-- The Accessibility service sees only which app is in the foreground. It cannot read screen content.
-- Your protected apps and pause history are stored locally on your device.
+- The Accessibility service checks the foreground app and, when websites are configured, supported browser address bars.
+- Your protected apps, website domains and pause history are stored locally on your device.
 - Android backup is disabled, so this data is not copied to Google Drive or another cloud backup.
 
 ## What One Pause stores on your device
@@ -18,22 +18,23 @@ The app keeps the following in private app storage using Android `SharedPreferen
 
 | Data | Purpose |
 | --- | --- |
+| Domains of websites you protect | To match browser addresses locally |
 | Package names of apps you protect | To know when to show the pause |
 | Pause length, reclaimed-time estimate, haptics preference | To apply your settings |
 | Onboarding completion flag | To skip onboarding on later launches |
 | Pause history: timestamp, app package name, and decision (left or continued) | To show insights and estimates |
 
-Pause history is capped at 4,000 events. There is no free-text field, contact data, location data, or device identifier stored by One Pause.
+Pause history is capped at 4,000 events. There is no contact data, location data, or device identifier stored by One Pause.
 
 You can erase pause history at any time from **Settings → Erase pause history**. Uninstalling the app, or clearing its storage in Android settings, removes all of the data above.
 
 ## Accessibility permission
 
-One Pause uses Android's Accessibility service to notice when a protected app comes to the foreground.
+One Pause uses Android's Accessibility service to notice protected apps and inspect supported browser address bars when website protection is configured.
 
-- The service is configured for `typeWindowStateChanged` events only.
-- It requests `canRetrieveWindowContent="false"`.
-- It does not read the text on your screen, your messages, your passwords, your keystrokes, or your taps.
+- The service receives window state and content change events.
+- It requests `canRetrieveWindowContent="true"` and view IDs to find supported browser address bars.
+- It reads visible, unfocused address bar text in supported browsers and compares the hostname to your configured domains. It does not store visited addresses.
 - It compares the foreground app's package name with the list you chose.
 - The pause is drawn as an accessibility overlay. One Pause does not request the "display over other apps" permission.
 
@@ -51,7 +52,7 @@ This is removal friction, not an uninstall-proof lock. You may deactivate it at 
 - No user accounts or sign-in.
 - No advertising or ad identifiers.
 - No third-party analytics, attribution, or crash-reporting SDKs.
-- No reading of screen content, notifications, messages, passwords, or input.
+- No reading of notifications, messages, passwords, or typed input; browser address bars are checked as described above.
 - No selling, renting, or sharing of personal information.
 - No access to contacts, photos, location, microphone, or camera.
 

@@ -18,16 +18,16 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,27 +35,29 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import app.onepause.ui.components.AppIcon
 import app.onepause.ui.components.ChoiceChip
-import app.onepause.ui.components.OnePauseSwitch
-import app.onepause.ui.components.Pill
+import app.onepause.ui.components.EmptyState
 import app.onepause.ui.components.PrimaryButton
 import app.onepause.ui.components.ScreenHeader
 import app.onepause.ui.components.SectionLabel
@@ -63,9 +65,8 @@ import app.onepause.ui.components.SoftCard
 import app.onepause.util.InstalledApp
 import app.onepause.util.loadLaunchableApps
 import app.onepause.util.suggestedPackages
-import java.util.Locale
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.collect
 
 @Composable
 fun AppsScreen(
@@ -77,23 +78,47 @@ fun AppsScreen(
 ) {
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     var apps by remember { mutableStateOf<List<InstalledApp>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
+    var loadFailed by remember { mutableStateOf(false) }
+    var loadAttempt by remember { mutableIntStateOf(0) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var protectedOnly by rememberSaveable { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    var savedScrollIndex by rememberSaveable { mutableIntStateOf(0) }
+    var savedScrollOffset by rememberSaveable { mutableIntStateOf(0) }
 
-    LaunchedEffect(Unit) {
-        apps = withContext(Dispatchers.IO) {
-            runCatching { loadLaunchableApps(context) }.getOrDefault(emptyList())
+    LaunchedEffect(loadAttempt) {
+        loading = true
+        loadFailed = false
+        try {
+            apps = loadLaunchableApps(context)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            loadFailed = true
         }
         loading = false
+    }
+
+    // Keep the last position while the catalog reloads after returning to this tab.
+    // Restoring against the temporary loading row would otherwise clamp it to the top.
+    LaunchedEffect(loading, loadFailed) {
+        if (!loading && !loadFailed) {
+            listState.scrollToItem(savedScrollIndex, savedScrollOffset)
+            snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+                .collect { (index, offset) ->
+                    savedScrollIndex = index
+                    savedScrollOffset = offset
+                }
+        }
     }
 
     val filteredApps = remember(apps, searchQuery, protectedOnly, selectedPackages) {
         apps.filter { app ->
             (!protectedOnly || app.packageName in selectedPackages) &&
-                (searchQuery.isBlank() ||
-                    app.label.contains(searchQuery.trim(), ignoreCase = true))
+                (searchQuery.isBlank() || app.label.contains(searchQuery.trim(), ignoreCase = true))
         }
     }
     val popularSuggestions = remember(apps, selectedPackages) {
@@ -101,90 +126,47 @@ fun AppsScreen(
     }
 
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .imePadding(),
+        modifier = modifier.fillMaxSize().statusBarsPadding().imePadding(),
+        state = listState,
         contentPadding = PaddingValues(bottom = 132.dp)
     ) {
-        item {
-            Column(
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
-            ) {
-                ScreenHeader(
-                    overline = "Protected apps",
-                    title = "Choose your friction.",
-                    subtitle = "Pick the apps that tend to pull you in. One Pause steps in before only these open."
-                )
-                Spacer(Modifier.height(16.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Pill(
-                        text = "${selectedPackages.size} protected",
-                        background = if (selectedPackages.isNotEmpty()) colors.secondaryContainer else colors.surfaceContainerLow,
-                        borderColor = if (selectedPackages.isNotEmpty()) Color.Transparent else colors.outlineVariant
-                    )
-                    if (!serviceEnabled) {
-                        Pill(
-                            text = "protection off",
-                            background = colors.tertiaryContainer.copy(alpha = 0.75f),
-                            borderColor = Color.Transparent
-                        )
-                    }
-                }
-            }
+        item(key = "header") {
+            ScreenHeader(
+                overline = "Make room for what matters",
+                title = "Apps",
+                subtitle = "A moment to choose before the apps you reach for.",
+                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 18.dp, bottom = 24.dp)
+            )
         }
 
-        item {
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+        item(key = "search") {
+            Column(Modifier.padding(horizontal = 20.dp)) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = {
-                        Text(
-                            text = "Search your apps",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                    },
+                    placeholder = { Text("Search apps") },
                     leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Rounded.Search,
-                            contentDescription = null,
-                            tint = colors.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Icon(Icons.Rounded.Search, contentDescription = null, modifier = Modifier.size(21.dp))
                     },
                     trailingIcon = if (searchQuery.isNotEmpty()) {
                         {
                             IconButton(onClick = { searchQuery = "" }) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Close,
-                                    contentDescription = "Clear search",
-                                    tint = colors.onSurfaceVariant,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Icon(Icons.Rounded.Close, contentDescription = "Clear search", modifier = Modifier.size(19.dp))
                             }
                         }
-                    } else {
-                        null
-                    },
+                    } else null,
                     singleLine = true,
-                    shape = CircleShape,
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { }),
+                    shape = RoundedCornerShape(16.dp),
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = colors.surfaceContainerLow,
                         unfocusedContainerColor = colors.surfaceContainerLow,
-                        focusedBorderColor = colors.onSurface.copy(alpha = 0.55f),
-                        unfocusedBorderColor = colors.outlineVariant,
-                        cursorColor = colors.tertiary,
-                        focusedTextColor = colors.onSurface,
-                        unfocusedTextColor = colors.onSurface
+                        focusedBorderColor = colors.primary,
+                        unfocusedBorderColor = Color.Transparent,
+                        cursorColor = colors.primary
                     )
                 )
                 Spacer(Modifier.height(12.dp))
@@ -192,261 +174,173 @@ fun AppsScreen(
                     ChoiceChip(
                         text = "All apps",
                         selected = !protectedOnly,
-                        onClick = { protectedOnly = false }
+                        onClick = { protectedOnly = false },
+                        modifier = Modifier.weight(1f)
                     )
                     ChoiceChip(
-                        text = if (selectedPackages.isEmpty()) {
-                            "Protected"
-                        } else {
-                            "Protected · ${selectedPackages.size}"
-                        },
+                        text = "Selected · ${selectedPackages.size}",
                         selected = protectedOnly,
-                        onClick = { protectedOnly = true }
+                        onClick = { protectedOnly = true },
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
         }
 
         if (!serviceEnabled) {
-            item {
-                Box(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
-                    SoftCard(
-                        color = colors.tertiaryContainer.copy(alpha = 0.7f),
-                        borderColor = Color.Transparent
+            item(key = "protection") {
+                SoftCard(
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp),
+                    color = colors.primaryContainer,
+                    borderColor = Color.Transparent
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(role = Role.Button, onClick = onEnableProtection)
+                            .padding(18.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .background(colors.tertiary.copy(alpha = 0.22f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Lock,
-                                    contentDescription = null,
-                                    tint = colors.onSurface,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Spacer(Modifier.width(11.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Protection is off",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = colors.onSurface
-                                )
-                                Text(
-                                    text = "Your choices are saved, but pauses can't appear yet.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = colors.onSurfaceVariant
-                                )
-                            }
-                            Spacer(Modifier.width(10.dp))
-                            IconButton(onClick = onEnableProtection) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                                    contentDescription = "Turn on accessibility",
-                                    tint = colors.onSurface
-                                )
-                            }
+                        Icon(Icons.Rounded.Shield, contentDescription = null, tint = colors.onPrimaryContainer, modifier = Modifier.size(23.dp))
+                        Spacer(Modifier.width(14.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Turn on protection", style = MaterialTheme.typography.titleSmall, color = colors.onPrimaryContainer)
+                            Spacer(Modifier.height(3.dp))
+                            Text("Your choices are saved. Enable accessibility to start pausing.", style = MaterialTheme.typography.bodySmall, color = colors.onPrimaryContainer)
                         }
+                        Spacer(Modifier.width(12.dp))
+                        Icon(Icons.AutoMirrored.Rounded.ArrowForward, contentDescription = null, tint = colors.onPrimaryContainer, modifier = Modifier.size(19.dp))
                     }
                 }
             }
         }
 
         if (popularSuggestions.isNotEmpty() && !protectedOnly && searchQuery.isBlank()) {
-            item {
-                Box(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
-                    SoftCard(
-                        color = colors.tertiaryContainer,
-                        borderColor = Color.Transparent
-                    ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    SectionLabel("A place to start", color = colors.onSurface.copy(alpha = 0.48f))
-                                    Spacer(Modifier.height(5.dp))
-                                    Text(
-                                        text = "The usual time thieves",
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        color = colors.onSurface
-                                    )
-                                }
-                                Row {
-                                    popularSuggestions.take(3).forEachIndexed { index, app ->
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(start = if (index == 0) 0.dp else 4.dp)
-                                                .size(32.dp)
-                                                .background(Color.White.copy(alpha = 0.6f), CircleShape),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            AppIcon(
-                                                packageName = app.packageName,
-                                                icon = app.icon,
-                                                size = 24.dp
-                                            )
-                                        }
-                                    }
+            item(key = "suggestions") {
+                SoftCard(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp)) {
+                    Column(Modifier.padding(20.dp)) {
+                        SectionLabel("A place to start")
+                        Spacer(Modifier.height(12.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                popularSuggestions.take(3).forEach { app ->
+                                    AppIcon(packageName = app.packageName, icon = app.icon, size = 32.dp)
                                 }
                             }
-                            Spacer(Modifier.height(12.dp))
-                            Text(
-                                text = "${popularSuggestions.size} popular social and entertainment apps are installed on this phone.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colors.onSurface.copy(alpha = 0.58f)
-                            )
-                            Spacer(Modifier.height(13.dp))
-                            PrimaryButton(
-                                text = "Add ${popularSuggestions.size} popular apps",
-                                onClick = {
-                                    onSelectionChange(selectedPackages + popularSuggestions.map { it.packageName })
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                containerColor = colors.onSurface,
-                                contentColor = colors.inverseOnSurface
-                            )
+                            Spacer(Modifier.width(14.dp))
+                            Text("A little less autopilot.", style = MaterialTheme.typography.titleMedium, color = colors.onSurface, modifier = Modifier.weight(1f))
                         }
+                        Spacer(Modifier.height(12.dp))
+                        Text(
+                            "Start with ${popularSuggestions.size} social and entertainment ${if (popularSuggestions.size == 1) "app" else "apps"}. You can change your choices anytime.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(18.dp))
+                        PrimaryButton(
+                            text = "Select ${popularSuggestions.size} suggested ${if (popularSuggestions.size == 1) "app" else "apps"}",
+                            onClick = { onSelectionChange(selectedPackages + popularSuggestions.map { it.packageName }) },
+                            modifier = Modifier.fillMaxWidth(),
+                            containerColor = colors.primaryContainer,
+                            contentColor = colors.onPrimaryContainer
+                        )
                     }
                 }
             }
         }
 
-        item {
+        item(key = "list_title") {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 18.dp, bottom = 10.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 26.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SectionLabel(
-                    text = when {
-                        protectedOnly -> "Your protected apps"
+                    when {
                         searchQuery.isNotBlank() -> "Search results"
-                        else -> "All apps"
+                        protectedOnly -> "Selected apps"
+                        else -> "Your apps"
                     }
                 )
                 Spacer(Modifier.weight(1f))
-                Text(
-                    text = "${filteredApps.size}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.onSurfaceVariant.copy(alpha = 0.6f)
-                )
+                if (!loading && !loadFailed) {
+                    Text("${filteredApps.size}", style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant)
+                }
             }
         }
 
-        if (loading) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 54.dp),
-                    contentAlignment = Alignment.Center
+        when {
+            loading -> item(key = "loading") {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 44.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    CircularProgressIndicator(
-                        color = colors.tertiary,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(25.dp)
-                    )
+                    CircularProgressIndicator(color = colors.primary, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+                    Text("Finding your apps…", style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
                 }
             }
-        } else if (filteredApps.isEmpty()) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp, vertical = 42.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Box(
-                            modifier = Modifier
-                                .size(50.dp)
-                                .background(colors.secondaryContainer, CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Check,
-                                contentDescription = null,
-                                tint = colors.onSurface,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Spacer(Modifier.height(13.dp))
-                        Text(
-                            text = if (protectedOnly) "Nothing protected yet." else "No apps found.",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = colors.onSurface
-                        )
-                        Spacer(Modifier.height(5.dp))
-                        Text(
-                            text = if (protectedOnly) {
-                                "Pick an app from the full list to add a pause."
-                            } else {
-                                "Try a different name."
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colors.onSurfaceVariant
-                        )
+            loadFailed -> item(key = "load_error") {
+                EmptyState(
+                    title = "Couldn't load your apps",
+                    body = "Your saved choices are safe. Try loading the list again.",
+                    action = { PrimaryButton("Try again", onClick = { loadAttempt++ }) }
+                )
+            }
+            filteredApps.isEmpty() -> item(key = "empty") {
+                EmptyState(
+                    title = when {
+                        searchQuery.isNotBlank() -> "No matches"
+                        protectedOnly -> "Start with one app"
+                        else -> "No apps available"
+                    },
+                    body = when {
+                        searchQuery.isNotBlank() -> "Try another app name or clear your search."
+                        protectedOnly -> "Choose an app you often open without thinking. A small pause can help."
+                        else -> "Launchable apps on this device will appear here."
+                    },
+                    action = when {
+                        searchQuery.isNotBlank() -> ({ PrimaryButton("Clear search", onClick = { searchQuery = "" }) })
+                        protectedOnly -> ({ PrimaryButton("Browse apps", onClick = { protectedOnly = false }) })
+                        else -> null
                     }
-                }
+                )
             }
-        } else {
-            itemsIndexed(
-                items = filteredApps,
-                key = { _, app -> app.packageName }
-            ) { index, app ->
+            else -> itemsIndexed(filteredApps, key = { _, app -> app.packageName }) { index, app ->
                 val selected = app.packageName in selectedPackages
-                val isFirst = index == 0
                 val isLast = index == filteredApps.lastIndex
-                val shape = RoundedCornerShape(
-                    topStart = if (isFirst) 24.dp else 0.dp,
-                    topEnd = if (isFirst) 24.dp else 0.dp,
-                    bottomStart = if (isLast) 24.dp else 0.dp,
-                    bottomEnd = if (isLast) 24.dp else 0.dp
-                )
-                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    Surface(color = colors.surfaceContainerLow, shape = shape) {
-                        Column {
-                            AppRow(
-                                app = app,
-                                selected = selected,
-                                isPopular = app.packageName in suggestedPackages,
-                                onToggle = {
-                                    onSelectionChange(
-                                        if (selected) {
-                                            selectedPackages - app.packageName
-                                        } else {
-                                            selectedPackages + app.packageName
-                                        }
-                                    )
-                                }
-                            )
-                            if (!isLast) {
-                                Box(
-                                    Modifier
-                                        .padding(start = 72.dp)
-                                        .fillMaxWidth()
-                                        .height(1.dp)
-                                        .background(colors.outlineVariant.copy(alpha = 0.65f))
-                                )
+                Surface(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    color = colors.surfaceContainerLow,
+                    shape = RoundedCornerShape(
+                        topStart = if (index == 0) 22.dp else 0.dp,
+                        topEnd = if (index == 0) 22.dp else 0.dp,
+                        bottomStart = if (isLast) 22.dp else 0.dp,
+                        bottomEnd = if (isLast) 22.dp else 0.dp
+                    )
+                ) {
+                    Column {
+                        AppRow(
+                            app = app,
+                            selected = selected,
+                            serviceEnabled = serviceEnabled,
+                            onToggle = {
+                                onSelectionChange(if (selected) selectedPackages - app.packageName else selectedPackages + app.packageName)
                             }
+                        )
+                        if (!isLast) {
+                            Box(Modifier.padding(start = 74.dp).fillMaxWidth().height(0.5.dp).background(colors.outlineVariant))
                         }
                     }
                 }
             }
         }
 
-        item {
+        item(key = "privacy") {
             Text(
-                text = "One Pause only sees which app is in front. It never reads what's on your screen.",
+                text = "Your selections stay on this device. Change them anytime.",
                 style = MaterialTheme.typography.bodySmall,
-                color = colors.onSurfaceVariant.copy(alpha = 0.65f),
-                modifier = Modifier.padding(horizontal = 26.dp, vertical = 22.dp)
+                color = colors.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 26.dp, vertical = 20.dp)
             )
         }
     }
@@ -456,56 +350,33 @@ fun AppsScreen(
 private fun AppRow(
     app: InstalledApp,
     selected: Boolean,
-    isPopular: Boolean,
+    serviceEnabled: Boolean,
     onToggle: () -> Unit
 ) {
     val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onToggle)
-            .padding(horizontal = 15.dp, vertical = 13.dp),
+            .toggleable(value = selected, role = Role.Switch, onValueChange = { onToggle() })
+            .padding(horizontal = 16.dp, vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AppIcon(
-            packageName = app.packageName,
-            icon = app.icon,
-            size = 42.dp
-        )
-        Spacer(Modifier.width(13.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = app.label,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
-                if (isPopular) {
-                    Spacer(Modifier.width(7.dp))
-                    Text(
-                        text = "POPULAR",
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, letterSpacing = 0.9.sp),
-                        color = colors.tertiary,
-                        modifier = Modifier
-                            .background(colors.tertiaryContainer.copy(alpha = 0.5f), CircleShape)
-                            .padding(horizontal = 6.dp, vertical = 3.dp)
-                    )
-                }
-            }
-            Spacer(Modifier.height(2.dp))
+        AppIcon(packageName = app.packageName, icon = app.icon, size = 44.dp)
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(app.label, style = MaterialTheme.typography.titleMedium, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(3.dp))
             Text(
-                text = if (selected) "Pause before opening" else "No pause",
+                text = when {
+                    selected && serviceEnabled -> "Pause before opening"
+                    selected -> "Selected · protection off"
+                    else -> "Opens as usual"
+                },
                 style = MaterialTheme.typography.bodySmall,
-                color = if (selected) colors.onSurfaceVariant else colors.onSurfaceVariant.copy(alpha = 0.6f)
+                color = colors.onSurfaceVariant
             )
         }
-        Spacer(Modifier.width(10.dp))
-        OnePauseSwitch(
-            checked = selected,
-            onCheckedChange = { onToggle() }
-        )
+        Spacer(Modifier.width(12.dp))
+        Switch(checked = selected, onCheckedChange = null)
     }
 }

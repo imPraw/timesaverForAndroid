@@ -17,6 +17,7 @@ import app.onepause.data.AppPreferences
 import app.onepause.ui.MainShell
 import app.onepause.ui.onboarding.OnboardingScreen
 import app.onepause.ui.theme.OnePauseTheme
+import app.onepause.ui.theme.isDarkAppearance
 import app.onepause.util.isAccessibilityServiceEnabled
 import app.onepause.util.openAccessibilitySettings
 
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
     private var serviceEnabled by mutableStateOf(false)
     private var onboardingComplete by mutableStateOf(false)
     private var resumeTick by mutableIntStateOf(0)
+    private var appearanceMode by mutableStateOf("system")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,17 +38,18 @@ class MainActivity : ComponentActivity() {
         )
 
         preferences = AppPreferences(this)
+        appearanceMode = preferences.appearanceMode
         onboardingComplete = preferences.onboardingComplete
         serviceEnabled = isAccessibilityServiceEnabled(this)
 
         setContent {
-            OnePauseTheme(dark = !onboardingComplete || androidx.compose.foundation.isSystemInDarkTheme()) {
+            val dark = isDarkAppearance(appearanceMode)
+            OnePauseTheme(dark = dark) {
                 val view = LocalView.current
-                val dark = androidx.compose.foundation.isSystemInDarkTheme()
                 SideEffect {
                     WindowCompat.getInsetsController(window, view).apply {
-                        isAppearanceLightStatusBars = onboardingComplete && !dark
-                        isAppearanceLightNavigationBars = onboardingComplete && !dark
+                        isAppearanceLightStatusBars = !dark
+                        isAppearanceLightNavigationBars = !dark
                     }
                 }
 
@@ -63,7 +66,12 @@ class MainActivity : ComponentActivity() {
                     MainShell(
                         preferences = preferences,
                         serviceEnabled = serviceEnabled,
-                        resumeTick = resumeTick
+                        resumeTick = resumeTick,
+                        appearanceMode = appearanceMode,
+                        onAppearanceModeChange = {
+                            preferences.appearanceMode = it
+                            appearanceMode = it
+                        }
                     )
                 }
             }
@@ -73,6 +81,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (::preferences.isInitialized) {
+            appearanceMode = preferences.appearanceMode
             app.onepause.util.UninstallGuard.releaseIfUnprotected(this)
             serviceEnabled = isAccessibilityServiceEnabled(this)
             resumeTick++

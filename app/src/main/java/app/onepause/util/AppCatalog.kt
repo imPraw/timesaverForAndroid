@@ -82,6 +82,9 @@ suspend fun loadLaunchableApps(context: Context): List<InstalledApp> = withConte
 }
 
 fun loadLightAppInfo(context: Context, packageName: String): LightAppInfo {
+    if (packageName.startsWith("website:")) {
+        return LightAppInfo(packageName, packageName.removePrefix("website:"), null)
+    }
     val packageManager = context.packageManager
     return runCatching {
         val info = packageManager.getApplicationInfo(packageName, 0)

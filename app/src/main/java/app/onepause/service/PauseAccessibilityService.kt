@@ -16,6 +16,7 @@ import app.onepause.data.AppPreferences
 import app.onepause.data.PauseDecision
 import app.onepause.data.PauseEventStore
 import app.onepause.util.UninstallGuard
+import app.onepause.util.WebsiteDomain
 
 class PauseAccessibilityService : AccessibilityService() {
 
@@ -32,9 +33,28 @@ class PauseAccessibilityService : AccessibilityService() {
     private var finishingPause = false
     private var overlayVisible = false
     private var currentPackage: String? = null
-    private var currentLabel: String = ""
+    private var currentTarget: String? = null
+    private var foregroundPackage: String? = null
     private val cooldownUntil = mutableMapOf<String, Long>()
     private var launchableHomePackages: Set<String> = emptySet()
+    private var browserCheckScheduled = false
+    private val browserCheck = object : Runnable {
+        override fun run() {
+            browserCheckScheduled = false
+            if (overlayVisible) return
+            val packageName = rootInActiveWindow?.packageName?.toString() ?: return
+            if (packageName !in BROWSER_ADDRESS_IDS) return
+            foregroundPackage = packageName
+            checkWebsite(packageName)
+            if (!overlayVisible) scheduleBrowserCheck(BROWSER_CHECK_INTERVAL_MS)
+        }
+    }
+
+    private fun scheduleBrowserCheck(delay: Long = 200L) {
+        if (browserCheckScheduled) return
+        browserCheckScheduled = true
+        handler.postDelayed(browserCheck, delay)
+    }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -56,20 +76,48 @@ class PauseAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
-        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+        if (event.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            event.eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) return
         val packageName = event.packageName?.toString()?.takeIf { it.isNotBlank() } ?: return
         if (packageName == this.packageName) return
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) foregroundPackage = packageName
 
         if (overlayVisible) {
-            if (packageName != currentPackage && packageName in launchableHomePackages) {
-                // Pressing Home while the pause is visible is a clear "leave it for now".
+            if (!finishingPause && packageName != currentPackage && packageName in launchableHomePackages &&
+                event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
                 finishPause(PauseDecision.AVOIDED)
             }
             return
         }
-
-        if (shouldPause(packageName)) {
+        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && shouldPause(packageName)) {
             showPause(packageName)
+        }
+        // Window-state events can come from the keyboard or browser dialogs, rather than
+        // the browser itself. Inspect the active window after it has settled instead of
+        // trusting the package on the last event.
+        scheduleBrowserCheck()
+    }
+
+    private fun checkWebsite(packageName: String) {
+        if (preferences.blockedDomains.isEmpty()) return
+        val ids = BROWSER_ADDRESS_IDS[packageName] ?: return
+        val root = rootInActiveWindow ?: return
+        if (root.packageName?.toString() != packageName) return
+        for (id in ids) {
+            val nodes = root.findAccessibilityNodeInfosByViewId("$packageName:id/$id")
+            for (node in nodes) {
+                if (!node.isVisibleToUser || node.isFocused) continue
+                val address = node.text?.toString().orEmpty().ifBlank {
+                    node.contentDescription?.toString().orEmpty()
+                }
+                val host = WebsiteDomain.parse(address) ?: continue
+                val domain = preferences.blockedDomains.firstOrNull { WebsiteDomain.matches(host, it) } ?: continue
+                val target = "website:$domain"
+                if (SystemClock.elapsedRealtime() >= (cooldownUntil[target] ?: 0L)) {
+                    showPause(packageName, target, domain)
+                    return
+                }
+            }
         }
     }
 
@@ -78,6 +126,7 @@ class PauseAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         stopObservingProtection()
         handler.removeCallbacksAndMessages(null)
+        browserCheckScheduled = false
         finishingPause = false
         overlayController?.hide()
         overlayController = null
@@ -89,6 +138,7 @@ class PauseAccessibilityService : AccessibilityService() {
     override fun onUnbind(intent: Intent?): Boolean {
         stopObservingProtection()
         handler.removeCallbacksAndMessages(null)
+        browserCheckScheduled = false
         finishingPause = false
         UninstallGuard.releaseIfUnprotected(this)
         overlayController?.hide()
@@ -112,7 +162,7 @@ class PauseAccessibilityService : AccessibilityService() {
         return SystemClock.elapsedRealtime() >= cooldown
     }
 
-    private fun showPause(packageName: String) {
+    private fun showPause(packageName: String, target: String = packageName, label: String? = null) {
         val controller = overlayController ?: return
         val appInfo = runCatching {
             val info = packageManager.getApplicationInfo(packageName, 0)
@@ -122,12 +172,12 @@ class PauseAccessibilityService : AccessibilityService() {
         }.getOrNull() ?: return
 
         currentPackage = packageName
-        currentLabel = appInfo.first
+        currentTarget = target
         overlayVisible = true
 
         val shown = controller.show(
             appPackage = packageName,
-            appLabel = appInfo.first,
+            appLabel = label ?: appInfo.first,
             appIcon = appInfo.second,
             pauseSeconds = preferences.pauseSeconds,
             hapticsEnabled = preferences.hapticsEnabled,
@@ -144,10 +194,14 @@ class PauseAccessibilityService : AccessibilityService() {
         if (!overlayVisible || finishingPause) return
         finishingPause = true
         val packageName = currentPackage
+        val target = currentTarget
 
-        if (packageName != null) {
-            cooldownUntil[packageName] = SystemClock.elapsedRealtime() +
-                if (decision == PauseDecision.CONTINUED) CONTINUE_COOLDOWN_MS else LEAVE_COOLDOWN_MS
+        if (packageName != null && target != null) {
+            if (decision == PauseDecision.CONTINUED) {
+                cooldownUntil[target] = SystemClock.elapsedRealtime() + CONTINUE_COOLDOWN_MS
+            } else {
+                cooldownUntil.remove(target)
+            }
             PauseEventStore.record(this, packageName, decision)
         }
 
@@ -158,6 +212,13 @@ class PauseAccessibilityService : AccessibilityService() {
                     overlayVisible = false
                     currentPackage = null
                     finishingPause = false
+                    // Recheck the actual foreground window if it changed while the overlay hid.
+                    val foreground = rootInActiveWindow?.packageName?.toString() ?: foregroundPackage
+                    if (foreground != null && foreground !in launchableHomePackages &&
+                        (decision != PauseDecision.CONTINUED || foreground != packageName)) {
+                        if (shouldPause(foreground)) showPause(foreground) else checkWebsite(foreground)
+                    }
+                    if (!overlayVisible) scheduleBrowserCheck()
                 }
             } else {
                 overlayVisible = false
@@ -203,6 +264,17 @@ class PauseAccessibilityService : AccessibilityService() {
 
     companion object {
         private const val CONTINUE_COOLDOWN_MS = 60_000L
-        private const val LEAVE_COOLDOWN_MS = 4_000L
+        private const val BROWSER_CHECK_INTERVAL_MS = 500L
+        private val BROWSER_ADDRESS_IDS = mapOf(
+            "com.android.chrome" to listOf("url_bar"),
+            "com.chrome.beta" to listOf("url_bar"),
+            "com.chrome.dev" to listOf("url_bar"),
+            "com.chrome.canary" to listOf("url_bar"),
+            "com.brave.browser" to listOf("url_bar"),
+            "com.microsoft.emmx" to listOf("url_bar"),
+            "com.sec.android.app.sbrowser" to listOf("location_bar_edit_text"),
+            "org.mozilla.firefox" to listOf("mozac_browser_toolbar_url_view", "url_bar_title"),
+            "org.mozilla.firefox_beta" to listOf("mozac_browser_toolbar_url_view", "url_bar_title")
+        )
     }
 }

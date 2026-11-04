@@ -15,34 +15,34 @@ val OnePauseTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = BodySans,
         fontWeight = FontWeight.Normal,
-        fontSize = 58.sp,
-        lineHeight = 58.sp,
+        fontSize = 56.sp,
+        lineHeight = 60.sp,
         letterSpacing = (-1.2).sp
     ),
     displayMedium = TextStyle(
         fontFamily = BodySans,
         fontWeight = FontWeight.Normal,
-        fontSize = 46.sp,
-        lineHeight = 48.sp,
+        fontSize = 44.sp,
+        lineHeight = 50.sp,
         letterSpacing = (-0.8).sp
     ),
     displaySmall = TextStyle(
         fontFamily = BodySans,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 38.sp,
         lineHeight = 40.sp,
         letterSpacing = (-0.4).sp
     ),
     headlineLarge = TextStyle(
         fontFamily = BodySans,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
-        lineHeight = 36.sp,
-        letterSpacing = (-0.2).sp
+        lineHeight = 38.sp,
+        letterSpacing = (-0.8).sp
     ),
     headlineMedium = TextStyle(
         fontFamily = BodySans,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
         lineHeight = 32.sp
     ),
@@ -80,8 +80,8 @@ val OnePauseTypography = Typography(
     bodyMedium = TextStyle(
         fontFamily = BodySans,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 21.sp
+        fontSize = 15.sp,
+        lineHeight = 22.sp
     ),
     bodySmall = TextStyle(
         fontFamily = BodySans,
@@ -106,8 +106,8 @@ val OnePauseTypography = Typography(
     labelSmall = TextStyle(
         fontFamily = BodySans,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 10.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 0.4.sp
+        fontSize = 11.sp,
+        lineHeight = 15.sp,
+        letterSpacing = 0.1.sp
     )
 )

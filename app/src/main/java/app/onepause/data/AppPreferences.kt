@@ -14,6 +14,10 @@ class AppPreferences(context: Context) {
             prefs.edit().putStringSet(KEY_BLOCKED_PACKAGES, value.toSet()).apply()
         }
 
+    var blockedDomains: Set<String>
+        get() = prefs.getStringSet("blocked_domains", emptySet())?.toSet().orEmpty()
+        set(value) { prefs.edit().putStringSet("blocked_domains", value.toSet()).apply() }
+
     var pauseSeconds: Int
         get() = prefs.getInt(KEY_PAUSE_SECONDS, DEFAULT_PAUSE_SECONDS)
             .coerceIn(MIN_PAUSE_SECONDS, MAX_PAUSE_SECONDS)
@@ -34,6 +38,15 @@ class AppPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_HAPTICS, true)
         set(value) {
             prefs.edit().putBoolean(KEY_HAPTICS, value).apply()
+        }
+
+    var appearanceMode: String
+        get() = prefs.getString("appearance_mode", "system")
+            ?.takeIf { it in setOf("system", "light", "dark") } ?: "system"
+        set(value) {
+            prefs.edit().putString("appearance_mode", value.takeIf {
+                it in setOf("system", "light", "dark")
+            } ?: "system").apply()
         }
 
     var onboardingComplete: Boolean

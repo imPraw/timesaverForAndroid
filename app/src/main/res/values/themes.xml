@@ -7,12 +7,12 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@color/warm_paper</item>
-        <item name="android:colorAccent">#E86F51</item>
+        <item name="android:colorAccent">#25674F</item>
         <item name="android:windowNoTitle">true</item>
     </style>
 
     <style name="Theme.OnePause.Pause" parent="Theme.OnePause">
-        <item name="android:windowBackground">@color/forest_deep</item>
-        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">@color/warm_paper</item>
+        <item name="android:windowLightStatusBar">@bool/light_system_bars</item>
     </style>
 </resources>

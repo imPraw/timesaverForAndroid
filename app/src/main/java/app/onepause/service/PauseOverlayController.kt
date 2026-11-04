@@ -25,8 +25,10 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import app.onepause.data.PauseDecision
+import app.onepause.data.AppPreferences
 import app.onepause.ui.pause.PauseScreen
 import app.onepause.ui.theme.OnePauseTheme
+import app.onepause.ui.theme.isDarkAppearance
 
 /**
  * Draws the pause as an accessibility overlay. Using TYPE_ACCESSIBILITY_OVERLAY avoids the
@@ -78,7 +80,7 @@ class PauseOverlayController(
                 }
             }
             setContent {
-                OnePauseTheme(dark = true) {
+                OnePauseTheme(dark = isDarkAppearance(AppPreferences(service).appearanceMode)) {
                     PauseScreen(
                         appLabel = appLabel,
                         appPackage = appPackage,

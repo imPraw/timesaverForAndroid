@@ -21,13 +21,13 @@ One Pause is an independent, local-first Android app that adds a short breathing
 | --- | --- | --- |
 | ![Home](docs/screenshots/pixel-home.jpg) | ![Dark home](docs/screenshots/pixel-dark.jpg) | ![Breathing pause](docs/screenshots/pixel-pause.jpg) |
 
-Colors vary with your wallpaper. Screenshots captured on an Android emulator.
+The updated design uses calm neutral surfaces with a consistent green accent. Screenshots captured on an Android emulator.
 Licenses remain available inside **Settings → Licenses & notices**.
 
 ## How it works
 
 1. **You choose the apps.** One Pause lists launchable apps on the device and lets you protect any of them.
-2. **Accessibility notices a launch.** The service listens only for foreground window changes and compares the package name with your protected list.
+2. **Accessibility notices a launch.** The service checks foreground apps and, for configured websites, supported browser address bars against your protected list.
 3. **A breathing overlay appears.** The pause is drawn with `TYPE_ACCESSIBILITY_OVERLAY`, so it can appear over the target app without the draw-over-other-apps permission.
 4. **You decide.** Choose **Not now** to close the app and return home, or wait for the pause to finish and choose **Open anyway**.
 5. **The pause steps aside.** After a decision, One Pause records the moment locally and applies a short cooldown so the overlay does not immediately reappear.
@@ -46,7 +46,7 @@ Pressing Home or Back while the pause is visible also counts as leaving the app 
 - **In-app licenses** for the typeface and open-source dependencies.
 - **Pixel-inspired Material You design** with wallpaper-derived colors on Android 12+, automatic light/dark mode, native Material navigation, and system sans-serif typography.
 - **Daily bloom**: grow one petal per intentional pause, up to five each day. Progress comes from existing on-device history.
-- **Wallpaper-tinted breathing screen** with a calm dark palette and existing optional haptics.
+- **Theme-aware breathing screen** with matching light and dark palettes and existing optional haptics.
 
 ### Smoother pauses & Pause Pal (1.2.0)
 
@@ -57,7 +57,7 @@ Pressing Home or Back while the pause is visible also counts as leaving the app 
 
 ### Pixel refresh (1.1.0)
 
-Colors follow **Settings → Wallpaper & style**, and the main screens follow the system dark theme. Older Android versions use the bundled fallback palette. The breathing screen intentionally stays dark. Dynamic color uses Android's [Material 3 color APIs](https://developer.android.com/develop/ui/compose/designsystems/material3); no wallpaper or photo permission is needed.
+Colors follow **Settings → Wallpaper & style**, and the main screens follow the system dark theme. Older Android versions use the bundled fallback palette. Appearance now follows Settings → Appearance across the app and breathing screen. Dynamic color uses Android's [Material 3 color APIs](https://developer.android.com/develop/ui/compose/designsystems/material3); no wallpaper or photo permission is needed.
 
 Install `OnePause-v1.2.0.apk` over your existing copy to retain settings and history, provided both copies use the same signing key.
 
@@ -66,8 +66,8 @@ Install `OnePause-v1.2.0.apk` over your existing copy to retain settings and his
 One Pause has **no internet permission**. It cannot send your data anywhere.
 
 - No account, sign-in, ads, analytics, crash reporting, or telemetry.
-- The Accessibility service requests only window-state events and sets `canRetrieveWindowContent="false"`.
-- It never reads screen content, messages, passwords, or keystrokes.
+- The Accessibility service receives window and content changes and can retrieve window content to find supported browser address bars.
+- It checks visible, unfocused browser address bars locally; it does not store visited addresses, messages, passwords, or keystrokes.
 - Settings and pause history are stored in local `SharedPreferences`.
 - Android backup and data extraction are disabled.
 
@@ -151,7 +151,7 @@ app/src/main/java/app/onepause/
 
 ## Limitations
 
-- **Apps only, not websites.** One Pause protects Android apps by package name. It does not inspect browser URLs or block domains. Website-level protection would require a browser integration, a VPN/DNS service, or an accessibility-based URL reader, each with different privacy trade-offs.
+- **Website detection varies by browser.** One Pause checks supported browser address bars for selected domains. It cannot guarantee coverage in every browser, private tab, or in-app browser, and does not install browser extensions.
 - **Accessibility must stay enabled.** Some device manufacturers aggressively stop background or accessibility services. If protection stops, reopen One Pause and check the status card.
 - **Reclaimed time is an estimate.** It is not measured screen time; it uses the per-session value you choose.
 - **No hard blocking.** The pause is friction, not a lock. After the countdown you can still choose to continue.
@@ -163,3 +163,7 @@ app/src/main/java/app/onepause/
 One Pause is an independent project and is not affiliated with One Sec or with any of the apps it helps you pause. DM Serif Display is used under the SIL Open Font License 1.1. AndroidX, Jetpack Compose, Material 3, Kotlin, and kotlinx.coroutines are used under the Apache License 2.0.
 
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details and the in-app **Licenses & notices** screen for the full texts.
+
+### Experience refresh
+
+Refined all main screens, onboarding, navigation, search and breathing controls. Settings → Appearance offers System, Light and Dark throughout the app. Tab state is preserved, keyboard actions work consistently, and breathing decisions remain accessible with larger text.
