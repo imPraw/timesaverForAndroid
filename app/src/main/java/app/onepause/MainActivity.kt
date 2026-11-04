@@ -73,6 +73,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         if (::preferences.isInitialized) {
+            app.onepause.util.UninstallGuard.releaseIfUnprotected(this)
             serviceEnabled = isAccessibilityServiceEnabled(this)
             resumeTick++
         }

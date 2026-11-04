@@ -1,9 +1,13 @@
 package app.onepause.ui.pause
 
 import android.graphics.drawable.Drawable
+import android.animation.ValueAnimator
+import android.os.SystemClock
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -41,11 +45,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -79,36 +85,47 @@ fun PauseScreen(
     onPhaseChange: (Boolean) -> Unit = {}
 ) {
     val colors = MaterialTheme.colorScheme
+    val motionEnabled = remember { ValueAnimator.areAnimatorsEnabled() }
+    val entrance = remember { Animatable(if (motionEnabled) 0f else 1f) }
+    var entered by remember { mutableStateOf(!motionEnabled) }
     var secondsLeft by remember(pauseSeconds) { mutableIntStateOf(pauseSeconds) }
     val breath = remember { Animatable(0f) }
     var phase by remember { mutableStateOf(BreathPhase.INHALE) }
-
-    LaunchedEffect(pauseSeconds) {
-        secondsLeft = pauseSeconds
-        for (second in pauseSeconds downTo 1) {
-            secondsLeft = second
-            delay(1000)
-        }
-        secondsLeft = 0
-    }
+    val phaseCallback by rememberUpdatedState(onPhaseChange)
 
     LaunchedEffect(Unit) {
-        while (true) {
-            phase = BreathPhase.INHALE
-            breath.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = 4000, easing = FastOutSlowInEasing)
-            )
-            phase = BreathPhase.EXHALE
-            breath.animateTo(
-                targetValue = 0f,
-                animationSpec = tween(durationMillis = 4000, easing = FastOutSlowInEasing)
-            )
-        }
+        if (motionEnabled) entrance.animateTo(1f, tween(320, easing = FastOutSlowInEasing))
+        entered = true
     }
 
-    LaunchedEffect(phase) {
-        onPhaseChange(phase == BreathPhase.INHALE)
+    // Start the timer with the first breath, using elapsed time rather than accumulated delays.
+    LaunchedEffect(entered, pauseSeconds) {
+        if (!entered) return@LaunchedEffect
+        val deadline = SystemClock.elapsedRealtime() + pauseSeconds * 1000L
+        do {
+            val remaining = deadline - SystemClock.elapsedRealtime()
+            secondsLeft = ((remaining.coerceAtLeast(0L) + 999L) / 1000L).toInt()
+            if (remaining > 0) delay(minOf(remaining, 100L))
+        } while (remaining > 0)
+    }
+
+    LaunchedEffect(entered) {
+        if (!entered) return@LaunchedEffect
+        val breathingEase = Easing { fraction ->
+            ((1.0 - kotlin.math.cos(Math.PI * fraction)) / 2.0).toFloat()
+        }
+        while (true) {
+            phase = BreathPhase.INHALE
+            phaseCallback(true)
+            val inhaleStart = SystemClock.elapsedRealtime()
+            if (motionEnabled) breath.animateTo(1f, tween(4000, easing = breathingEase))
+            delay((4000L - (SystemClock.elapsedRealtime() - inhaleStart)).coerceAtLeast(16L))
+            phase = BreathPhase.EXHALE
+            phaseCallback(false)
+            val exhaleStart = SystemClock.elapsedRealtime()
+            if (motionEnabled) breath.animateTo(0f, tween(4000, easing = breathingEase))
+            delay((4000L - (SystemClock.elapsedRealtime() - exhaleStart)).coerceAtLeast(16L))
+        }
     }
 
     val displayName = when {
@@ -121,6 +138,7 @@ fun PauseScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
+            .graphicsLayer { alpha = entrance.value }
             .background(
                 Brush.verticalGradient(
                     colors = listOf(colors.background, colors.surfaceContainer, colors.surfaceContainerHigh)
@@ -134,7 +152,13 @@ fun PauseScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(horizontal = 26.dp),
+                .padding(horizontal = 26.dp)
+                .graphicsLayer {
+                    val progress = entrance.value
+                    translationY = (1f - progress) * 12.dp.toPx()
+                    scaleX = 0.985f + 0.015f * progress
+                    scaleY = scaleX
+                },
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -207,13 +231,9 @@ fun PauseScreen(
             Spacer(Modifier.height(if (compact) 8.dp else 14.dp))
 
             BreathingOrb(
-                breath = breath.value,
+                breath = { breath.value },
                 phase = phase,
                 size = if (compact) 218.dp else 270.dp,
-                phaseLabel = when (phase) {
-                    BreathPhase.INHALE -> "Breathe in"
-                    BreathPhase.EXHALE -> "Breathe out"
-                }
             )
 
             Spacer(Modifier.height(if (compact) 14.dp else 24.dp))
@@ -406,17 +426,21 @@ private fun PauseAtmosphere(modifier: Modifier = Modifier) {
 
 @Composable
 private fun BreathingOrb(
-    breath: Float,
+    breath: () -> Float,
     phase: BreathPhase,
-    phaseLabel: String,
     size: Dp
 ) {
     val colors = MaterialTheme.colorScheme
+    val glint by animateFloatAsState(
+        targetValue = if (phase == BreathPhase.INHALE) 0.5f else 0f,
+        animationSpec = tween(600), label = "breathGlint"
+    )
     Box(
         modifier = Modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
+            val breath = breath()
             val center = center
             val maxRadius = this.size.minDimension / 2f
             drawCircle(
@@ -461,9 +485,9 @@ private fun BreathingOrb(
                 size = androidx.compose.ui.geometry.Size(arcRadius * 2, arcRadius * 2),
                 style = Stroke(width = 2.4.dp.toPx(), cap = StrokeCap.Round)
             )
-            if (phase == BreathPhase.INHALE) {
+            if (glint > 0f) {
                 drawCircle(
-                    color = colors.onSurface.copy(alpha = 0.5f),
+                    color = colors.onSurface.copy(alpha = glint),
                     radius = 2.4.dp.toPx(),
                     center = Offset(center.x + orbRadius * 0.73f, center.y + orbRadius * 0.31f)
                 )

@@ -2,6 +2,7 @@ package app.onepause.service
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.database.ContentObserver
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -9,17 +10,26 @@ import android.os.SystemClock
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import app.onepause.data.AppPreferences
 import app.onepause.data.PauseDecision
 import app.onepause.data.PauseEventStore
+import app.onepause.util.UninstallGuard
 
 class PauseAccessibilityService : AccessibilityService() {
 
     private lateinit var preferences: AppPreferences
     private var overlayController: PauseOverlayController? = null
     private val handler = Handler(Looper.getMainLooper())
+    private var observingProtection = false
+    private val protectionObserver = object : ContentObserver(handler) {
+        override fun onChange(selfChange: Boolean) {
+            UninstallGuard.releaseIfUnprotected(this@PauseAccessibilityService)
+        }
+    }
 
+    private var finishingPause = false
     private var overlayVisible = false
     private var currentPackage: String? = null
     private var currentLabel: String = ""
@@ -28,6 +38,15 @@ class PauseAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        if (!observingProtection) {
+            listOf(Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, Settings.Secure.ACCESSIBILITY_ENABLED)
+                .forEach { setting ->
+                    contentResolver.registerContentObserver(
+                        Settings.Secure.getUriFor(setting), false, protectionObserver
+                    )
+                }
+            observingProtection = true
+        }
         preferences = AppPreferences(this)
         launchableHomePackages = resolveHomePackages()
         overlayController = PauseOverlayController(this) { decision ->
@@ -57,6 +76,9 @@ class PauseAccessibilityService : AccessibilityService() {
     override fun onInterrupt() = Unit
 
     override fun onDestroy() {
+        stopObservingProtection()
+        handler.removeCallbacksAndMessages(null)
+        finishingPause = false
         overlayController?.hide()
         overlayController = null
         overlayVisible = false
@@ -65,10 +87,21 @@ class PauseAccessibilityService : AccessibilityService() {
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
+        stopObservingProtection()
+        handler.removeCallbacksAndMessages(null)
+        finishingPause = false
+        UninstallGuard.releaseIfUnprotected(this)
         overlayController?.hide()
         overlayVisible = false
         currentPackage = null
         return super.onUnbind(intent)
+    }
+
+    private fun stopObservingProtection() {
+        if (observingProtection) {
+            contentResolver.unregisterContentObserver(protectionObserver)
+            observingProtection = false
+        }
     }
 
     private fun shouldPause(packageName: String): Boolean {
@@ -108,10 +141,9 @@ class PauseAccessibilityService : AccessibilityService() {
     }
 
     private fun finishPause(decision: PauseDecision) {
-        if (!overlayVisible) return
+        if (!overlayVisible || finishingPause) return
+        finishingPause = true
         val packageName = currentPackage
-        overlayVisible = false
-        currentPackage = null
 
         if (packageName != null) {
             cooldownUntil[packageName] = SystemClock.elapsedRealtime() +
@@ -119,13 +151,26 @@ class PauseAccessibilityService : AccessibilityService() {
             PauseEventStore.record(this, packageName, decision)
         }
 
-        overlayController?.hide()
-
+        val dismiss = Runnable {
+            val controller = overlayController
+            if (controller != null) {
+                controller.hide(animated = true) {
+                    overlayVisible = false
+                    currentPackage = null
+                    finishingPause = false
+                }
+            } else {
+                overlayVisible = false
+                currentPackage = null
+                finishingPause = false
+            }
+        }
         if (decision != PauseDecision.CONTINUED) {
-            handler.postDelayed(
-                { performGlobalAction(GLOBAL_ACTION_HOME) },
-                140L
-            )
+            // Keep the app covered while the launcher comes forward, then gently reveal Home.
+            performGlobalAction(GLOBAL_ACTION_HOME)
+            handler.postDelayed(dismiss, 180L)
+        } else {
+            dismiss.run()
         }
     }
 

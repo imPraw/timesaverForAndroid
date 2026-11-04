@@ -1,28 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path
-        android:fillColor="@android:color/transparent"
-        android:pathData="M54,29 A25,25 0,1 1,53.9,29"
-        android:strokeColor="#F6F0E5"
-        android:strokeLineCap="round"
-        android:strokeWidth="3.2" />
-    <path
-        android:fillColor="@android:color/transparent"
-        android:pathData="M54,39 A15,15 0,1 0,53.9,39"
-        android:strokeColor="#A9C4B4"
-        android:strokeLineCap="round"
-        android:strokeWidth="2.6" />
-    <path
-        android:fillColor="#F1B18F"
-        android:pathData="M54,45.5 A8.5,8.5 0,1 1,53.9,45.5" />
-    <path
-        android:fillColor="@android:color/transparent"
-        android:pathData="M70,38 A23,23 0,0 1,77 54"
-        android:strokeColor="#F1B18F"
-        android:strokeLineCap="round"
-        android:strokeWidth="3.2" />
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Pause Pal: an original, soft sprout character inside the adaptive-icon safe zone. -->
+    <path android:fillColor="#102E31" android:pathData="M30,76 C30,71 78,71 78,76 C78,82 30,82 30,76Z" />
+    <path android:fillColor="#4FAD91" android:pathData="M48,37 C35,37 33,30 35,25 C46,24 53,28 54,35 C57,23 64,23 71,25 C70,35 63,39 54,38Z" />
+    <path android:fillColor="#A9E8C8" android:pathData="M32,53 C32,39 41,33 54,33 C68,33 76,41 76,54 L78,65 C80,76 69,80 54,80 C39,80 28,76 30,65Z" />
+    <path android:fillColor="#D5F8D9" android:pathData="M35,51 C35,41 43,36 52,36 C45,39 41,44 41,52 C40,57 35,56 35,51Z" />
+    <path android:fillColor="#75C6A6" android:pathData="M30,60 C21,56 24,67 32,69Z M76,60 C85,56 84,67 76,69Z" />
+    <path android:fillColor="#FFF8E8" android:pathData="M35,53 C35,46 39,43 43,43 C48,43 51,47 51,53 C51,59 47,62 43,62 C38,62 35,59 35,53Z M57,53 C57,46 61,43 65,43 C70,43 73,47 73,53 C73,59 69,62 65,62 C60,62 57,59 57,53Z" />
+    <!-- The two soft vertical pupils also echo a pause symbol. -->
+    <path android:fillColor="#193D3B" android:pathData="M43,49 C45,49 46,51 46,54 L46,56 C46,59 41,59 41,56 L41,53 C41,50 42,49 43,49Z M63,49 C65,49 66,51 66,54 L66,56 C66,59 61,59 61,56 L61,53 C61,50 62,49 63,49Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M42,50 A1.3,1.3 0,1 0,42.1 50Z M62,50 A1.3,1.3 0,1 0,62.1 50Z" />
+    <path android:fillColor="#F6AF9B" android:pathData="M33,62 C33,59 41,59 41,62 C41,65 33,65 33,62Z M67,62 C67,59 75,59 75,62 C75,65 67,65 67,62Z" />
+    <path android:fillColor="#00000000" android:strokeColor="#193D3B" android:strokeWidth="2.4" android:strokeLineCap="round" android:pathData="M49,65 Q54,71 59,65" />
+    <path android:fillColor="#75C6A6" android:pathData="M38,76 Q36,83 46,80 L48,76Z M60,76 L62,80 Q72,83 70,76Z" />
 </vector>

@@ -7,6 +7,12 @@ import android.provider.Settings
 import app.onepause.service.PauseAccessibilityService
 
 fun isAccessibilityServiceEnabled(context: Context): Boolean {
+    if (Settings.Secure.getInt(
+            context.contentResolver,
+            Settings.Secure.ACCESSIBILITY_ENABLED,
+            0
+        ) != 1
+    ) return false
     val expected = ComponentName(context, PauseAccessibilityService::class.java)
     val enabledServices = Settings.Secure.getString(
         context.contentResolver,

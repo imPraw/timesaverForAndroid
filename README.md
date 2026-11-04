@@ -48,11 +48,18 @@ Pressing Home or Back while the pause is visible also counts as leaving the app 
 - **Daily bloom**: grow one petal per intentional pause, up to five each day. Progress comes from existing on-device history.
 - **Wallpaper-tinted breathing screen** with a calm dark palette and existing optional haptics.
 
+### Smoother pauses & Pause Pal (1.2.0)
+
+- A 320 ms entrance fade and gentle settling motion lead into the first breath. Breathing, labels, and haptics start together. The orb reads animation progress during drawing to avoid recomposing the whole screen every frame.
+- Dismissal fades out over 180 ms. Choosing **Not now** brings Home forward before removing the overlay, reducing the flash of the protected app. Countdown uses monotonic elapsed time. Reduced-motion mode keeps timing and text cues without the expanding orb.
+- **Settings → Uninstall guard** offers an optional Android Device Admin deactivation step. It requests no wipe, lock, or password policies. Enable accessibility protection first, then approve Android's separate consent screen. Turn accessibility protection off to release it; you can also deactivate it directly under Android **Device admin apps**. This is extra friction, not a permanent uninstall block. Android's strict uninstall-block API requires managed-device privileges that a normal APK does not have.
+- The original **Pause Pal** sprout mascot replaces the launcher icon, with a matching monochrome version for Pixel themed icons.
+
 ### Pixel refresh (1.1.0)
 
 Colors follow **Settings → Wallpaper & style**, and the main screens follow the system dark theme. Older Android versions use the bundled fallback palette. The breathing screen intentionally stays dark. Dynamic color uses Android's [Material 3 color APIs](https://developer.android.com/develop/ui/compose/designsystems/material3); no wallpaper or photo permission is needed.
 
-Install `OnePause-v1.1.0.apk` over your existing copy to retain settings and history, provided both copies use the same signing key.
+Install `OnePause-v1.2.0.apk` over your existing copy to retain settings and history, provided both copies use the same signing key.
 
 ## Privacy
 

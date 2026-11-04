@@ -1,6 +1,8 @@
 package app.onepause.service
 
 import android.accessibilityservice.AccessibilityService
+import android.animation.ValueAnimator
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 import android.os.Build
@@ -129,19 +131,35 @@ class PauseOverlayController(
         }
     }
 
-    fun hide() {
-        if (!showing) return
-        showing = false
+    fun hide(animated: Boolean = false, onHidden: () -> Unit = {}) {
+        val view = composeView
+        if (!showing || view == null) {
+            onHidden()
+            return
+        }
         decided = true
         handler.removeCallbacks(timeout)
-        val view = composeView
         val owner = overlayOwner
-        composeView = null
-        overlayOwner = null
-        if (view != null) {
-            runCatching { windowManager.removeViewImmediate(view) }
+        val remove = {
+            // A cancelled animation must never remove a later overlay.
+            if (composeView === view) {
+                composeView = null
+                overlayOwner = null
+                showing = false
+                runCatching { windowManager.removeViewImmediate(view) }
+                view.disposeComposition()
+                owner?.destroy()
+                onHidden()
+            }
         }
-        owner?.destroy()
+        view.animate().cancel()
+        if (animated && ValueAnimator.areAnimatorsEnabled()) {
+            view.animate().alpha(0f).setDuration(180L)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .withEndAction { remove() }.start()
+        } else {
+            remove()
+        }
     }
 
     private fun decide(decision: PauseDecision) {

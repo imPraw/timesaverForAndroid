@@ -90,6 +90,10 @@ fun SettingsScreen(
         }
 
         item {
+            UninstallGuardCard(serviceEnabled, onOpenAccessibilitySettings)
+        }
+
+        item {
             SettingsCard(
                 title = "The pause",
                 description = "How long the breathing screen holds you before you can open a protected app."
